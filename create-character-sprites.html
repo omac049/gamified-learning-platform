@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Sprite Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        canvas {
+            border: 2px solid #ffd700;
+            margin: 10px;
+            background: transparent;
+        }
+        .character-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        button {
+            background: #4169E1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #3151C1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎭 Character Sprite Generator</h1>
+    <p>Generate character sprites for the learning platform. Right-click on each canvas to save the image.</p>
+
+    <div class="character-section">
+        <h2>📚 Scholar Hero</h2>
+        <canvas id="scholar" width="128" height="128"></canvas>
+        <button onclick="generateScholar()">Generate Scholar</button>
+        <button onclick="downloadCanvas('scholar', 'scholar_sprite.png')">Download</button>
+    </div>
+
+    <div class="character-section">
+        <h2>🔮 Mystic Companion</h2>
+        <canvas id="mystic" width="128" height="128"></canvas>
+        <button onclick="generateMystic()">Generate Mystic</button>
+        <button onclick="downloadCanvas('mystic', 'mystic_sprite.png')">Download</button>
+    </div>
+
+    <div class="character-section">
+        <h2>🤖 Tech Bot</h2>
+        <canvas id="techbot" width="128" height="128"></canvas>
+        <button onclick="generateTechBot()">Generate Tech Bot</button>
+        <button onclick="downloadCanvas('techbot', 'techbot_sprite.png')">Download</button>
+    </div>
+
+    <script>
+        function generateScholar() {
+            const canvas = document.getElementById('scholar');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 128, 128);
+            
+            // Scholar Hero - Book-like character with academic theme
+            
+            // Main body (book)
+            ctx.fillStyle = '#4169E1';
+            ctx.fillRect(20, 30, 88, 70);
+            
+            // Book spine
+            ctx.fillStyle = '#2E4BC6';
+            ctx.fillRect(20, 30, 15, 70);
+            
+            // Book pages
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(40, 35, 63, 60);
+            
+            // Text lines on pages
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(45, 45, 50, 2);
+            ctx.fillRect(45, 52, 45, 2);
+            ctx.fillRect(45, 59, 48, 2);
+            ctx.fillRect(45, 66, 42, 2);
+            
+            // Golden bookmark
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(95, 25, 8, 25);
+            
+            // Eyes
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(55, 50, 6, 0, Math.PI * 2);
+            ctx.arc(75, 50, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(55, 50, 3, 0, Math.PI * 2);
+            ctx.arc(75, 50, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Smile
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(65, 65, 8, 0, Math.PI);
+            ctx.stroke();
+            
+            // Graduation cap
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(45, 15, 40, 8);
+            ctx.fillRect(55, 8, 20, 12);
+            
+            // Tassel
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(85, 8, 2, 15);
+            ctx.beginPath();
+            ctx.arc(86, 23, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function generateMystic() {
+            const canvas = document.getElementById('mystic');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 128, 128);
+            
+            // Mystic Companion - Crystal ball with magical aura
+            
+            // Magical aura (outer glow)
+            const gradient = ctx.createRadialGradient(64, 64, 20, 64, 64, 60);
+            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.4)');
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(64, 64, 60, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Main crystal body
+            ctx.fillStyle = '#8B5CF6';
+            ctx.beginPath();
+            ctx.arc(64, 64, 35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Inner crystal core
+            ctx.fillStyle = '#EC4899';
+            ctx.beginPath();
+            ctx.arc(64, 64, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Crystal highlights
+            ctx.fillStyle = '#FFFFFF';
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.arc(55, 55, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(75, 70, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Mystical eyes
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(55, 60, 5, 0, Math.PI * 2);
+            ctx.arc(73, 60, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#8B5CF6';
+            ctx.beginPath();
+            ctx.arc(55, 60, 3, 0, Math.PI * 2);
+            ctx.arc(73, 60, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Magical sparkles around
+            ctx.fillStyle = '#FFD700';
+            const sparkles = [
+                {x: 30, y: 30}, {x: 98, y: 35}, {x: 25, y: 90}, 
+                {x: 100, y: 95}, {x: 45, y: 20}, {x: 85, y: 105}
+            ];
+            sparkles.forEach(sparkle => {
+                ctx.save();
+                ctx.translate(sparkle.x, sparkle.y);
+                ctx.rotate(Math.PI / 4);
+                ctx.fillRect(-2, -6, 4, 12);
+                ctx.fillRect(-6, -2, 12, 4);
+                ctx.restore();
+            });
+        }
+
+        function generateTechBot() {
+            const canvas = document.getElementById('techbot');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 128, 128);
+            
+            // Tech Bot - Futuristic robot design
+            
+            // Main body
+            ctx.fillStyle = '#10B981';
+            ctx.fillRect(25, 35, 78, 65);
+            
+            // Body panels
+            ctx.fillStyle = '#06B6D4';
+            ctx.fillRect(30, 40, 68, 55);
+            
+            // Central processing unit
+            ctx.fillStyle = '#10B981';
+            ctx.fillRect(45, 55, 38, 25);
+            
+            // Circuit patterns
+            ctx.strokeStyle = '#06B6D4';
+            ctx.lineWidth = 2;
+            
+            // Horizontal circuits
+            ctx.beginPath();
+            ctx.moveTo(35, 50);
+            ctx.lineTo(93, 50);
+            ctx.moveTo(35, 85);
+            ctx.lineTo(93, 85);
+            ctx.stroke();
+            
+            // Vertical circuits
+            ctx.beginPath();
+            ctx.moveTo(50, 45);
+            ctx.lineTo(50, 90);
+            ctx.moveTo(78, 45);
+            ctx.lineTo(78, 90);
+            ctx.stroke();
+            
+            // LED eyes
+            ctx.fillStyle = '#00FFFF';
+            ctx.beginPath();
+            ctx.arc(50, 65, 6, 0, Math.PI * 2);
+            ctx.arc(78, 65, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye glow
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(50, 65, 10, 0, Math.PI * 2);
+            ctx.arc(78, 65, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Antenna
+            ctx.strokeStyle = '#10B981';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(64, 35);
+            ctx.lineTo(64, 20);
+            ctx.stroke();
+            
+            // Antenna tip
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(64, 18, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Side panels
+            ctx.fillStyle = '#059669';
+            ctx.fillRect(20, 45, 8, 40);
+            ctx.fillRect(100, 45, 8, 40);
+            
+            // Digital display mouth
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(55, 75, 18, 8);
+            ctx.fillStyle = '#00FF00';
+            ctx.fillRect(57, 77, 3, 4);
+            ctx.fillRect(62, 77, 3, 4);
+            ctx.fillRect(67, 77, 3, 4);
+        }
+
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Generate all sprites on page load
+        window.onload = function() {
+            generateScholar();
+            generateMystic();
+            generateTechBot();
+        };
+    </script>
+</body>
+</html> 
