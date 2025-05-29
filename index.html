@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎮 Gamified Learning Adventure - 6-Week Educational Journey</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a0033;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #click-to-start {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(45deg, #1a0033, #2d1b69);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+        }
+        
+        #click-to-start.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .start-title {
+            font-size: 3rem;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 2rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        .start-subtitle {
+            font-size: 1.5rem;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+            margin-bottom: 3rem;
+        }
+        
+        .start-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background: transparent;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        
+        .start-button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+            transform: scale(1.05);
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ffff; }
+            to { text-shadow: 0 0 30px #00ffff, 0 0 40px #00ffff; }
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 2rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Click to Start Overlay -->
+    <div id="click-to-start">
+        <div class="start-title">CYBER BATTLE ACADEMY</div>
+        <div class="start-subtitle">2085</div>
+        <button class="start-button" onclick="startGame()">🚀 CLICK TO START 🚀</button>
+        <div class="instructions">
+            Click anywhere to begin your cyber adventure!<br>
+            Audio and interactions will be enabled after your first click.
+        </div>
+    </div>
+    
+    <div id="app">
+        <div id="phaser-container">
+            
+        </div>
+    </div>
+    
+    <script>
+        let gameStarted = false;
+        
+        function startGame() {
+            if (gameStarted) return;
+            gameStarted = true;
+            
+            console.log("User clicked to start - enabling audio and interactions");
+            
+            // Hide the start overlay
+            const overlay = document.getElementById('click-to-start');
+            overlay.classList.add('hidden');
+            
+            // Remove the overlay after transition
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+            
+            // Load the main game script
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = './src/main.js';
+            document.head.appendChild(script);
+        }
+        
+        // Also allow clicking anywhere on the overlay
+        document.getElementById('click-to-start').addEventListener('click', startGame);
+    </script>
+</body>
+
+</html>
