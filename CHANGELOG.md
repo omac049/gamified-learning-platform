@@ -192,4 +192,61 @@ All notable changes to the Gamified Learning Platform will be documented in this
 
 ---
 
-**Note**: This changelog follows [Keep a Changelog](https://keepachangelog.com/) format and [Semantic Versioning](https://semver.org/) principles. 
+**Note**: This changelog follows [Keep a Changelog](https://keepachangelog.com/) format and [Semantic Versioning](https://semver.org/) principles.
+
+## [2.0.0] - 2024-12-19 - 🤖 COMBAT SYSTEM EXPANSION
+
+### 🚀 Major Features Added
+- **Universal Combat System**: Reusable robot combat mechanics across all subjects
+- **Multi-Subject Integration**: Combat system now works in Math and Reading with Science ready
+- **Enhanced Character Stats**: Complete stat system with level scaling and equipment bonuses
+- **Cross-Subject Progression**: Character builds and equipment affect performance in all subjects
+
+### ⚔️ Combat System Enhancements
+- **Robot vs Robot Battles**: Epic combat animations for correct/incorrect answers
+- **Character-Specific Robots**: Unique designs for ARIA, TITAN, and NEXUS
+- **Stat-Based Combat**: Attack power, defense, speed, accuracy, luck, and intelligence integration
+- **Equipment Effects**: Weapons, shields, tech, and cores provide bonuses across ALL subjects
+- **Visual Combat Feedback**: Damage numbers, attack animations, and screen effects
+
+### 📚 Week 2: Reading Combat Arena
+- **Full Combat Integration**: Reading comprehension through epic robot battles
+- **Cyber-Themed Interface**: Enhanced UI with starfield background and combat statistics
+- **Character Stats Display**: Real-time combat stats shown during questions
+- **Equipment Bonuses**: All equipment effects work in reading challenges
+- **Streak System**: Consecutive correct answers with Streak Keeper protection
+
+### 🤖 Enhanced ProgressTracker
+- **Combat Stats Methods**: `getCharacterStats()`, `applyEquipmentStatsBonus()`, `getCombatMultipliers()`
+- **Intelligence Bonuses**: XP gains enhanced by intelligence stat
+- **Luck Bonuses**: Coin rewards boosted by luck stat
+- **Equipment Integration**: All equipment effects calculated and applied
+
+### 🎮 Enhanced User Experience
+- **Updated Game Instructions**: Comprehensive combat guide in help modal
+- **Combat Status Indicators**: Week cards show combat implementation status
+- **Enhanced Week Cards**: Visual indicators for combat-ready subjects
+- **Modern UI Updates**: Cyber Academy Robot Command Center branding
+
+### 🔧 Technical Improvements
+- **Modular Combat System**: Easy integration into any subject scene
+- **Event-Driven Architecture**: Clean separation between subjects and combat
+- **Performance Optimizations**: Reusable components and efficient graphics
+- **Template System**: Standardized combat implementation pattern
+
+### 📊 Documentation Updates
+- **README.md**: Complete rewrite reflecting combat system integration
+- **GAME_MECHANICS.md**: Comprehensive combat system documentation
+- **COMBAT_SYSTEM_EXPANSION.md**: Detailed implementation guide
+- **Help Modal**: Updated with combat system instructions
+
+### 🎯 Future Roadmap
+- **Phase 2**: Week 3-6 combat integration with boss battles
+- **Phase 3**: Special abilities and advanced combat features
+- **Phase 4**: Multiplayer PvP and guild systems
+
+---
+
+## [1.2.0] - 2024-12-18 - 🎯 Enhanced Math Combat Arena
+
+### 🚀 Major Features Added 

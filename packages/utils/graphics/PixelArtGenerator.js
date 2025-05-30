@@ -160,19 +160,33 @@ export class PixelArtGenerator {
      * Initialize texture atlas for performance optimization
      */
     initializeTextureAtlas() {
-        this.textureAtlas = {
-            canvas: document.createElement('canvas'),
-            context: null,
-            currentX: 0,
-            currentY: 0,
-            rowHeight: 0,
-            regions: new Map()
-        };
-        
-        this.textureAtlas.canvas.width = this.textureAtlasSize;
-        this.textureAtlas.canvas.height = this.textureAtlasSize;
-        this.textureAtlas.context = this.textureAtlas.canvas.getContext('2d');
-        this.textureAtlas.context.imageSmoothingEnabled = false;
+        try {
+            this.textureAtlas = {
+                canvas: document.createElement('canvas'),
+                context: null,
+                currentX: 0,
+                currentY: 0,
+                rowHeight: 0,
+                regions: new Map()
+            };
+            
+            this.textureAtlas.canvas.width = this.textureAtlasSize;
+            this.textureAtlas.canvas.height = this.textureAtlasSize;
+            this.textureAtlas.context = this.textureAtlas.canvas.getContext('2d');
+            
+            // Safety check for context
+            if (!this.textureAtlas.context) {
+                console.error('PixelArtGenerator: Failed to get 2D context for texture atlas');
+                this.textureAtlas = null;
+                return;
+            }
+            
+            this.textureAtlas.context.imageSmoothingEnabled = false;
+            console.log('PixelArtGenerator: Texture atlas initialized successfully');
+        } catch (error) {
+            console.error('PixelArtGenerator: Error initializing texture atlas:', error);
+            this.textureAtlas = null;
+        }
     }
 
     /**
@@ -217,6 +231,12 @@ export class PixelArtGenerator {
      */
     generateAdvancedCharacterSprite(characterType, config = {}) {
         try {
+            // Safety check for scene availability
+            if (!this.scene) {
+                console.error('PixelArtGenerator: Scene not available for sprite generation');
+                return this.createFallbackSprite(characterType);
+            }
+            
             // Enhanced configuration with defaults
             const fullConfig = {
                 artStyle: config.artStyle || 'modern16bit',
@@ -399,6 +419,12 @@ export class PixelArtGenerator {
             canvas.height = frameSize.height * this.config.pixelSize;
             const ctx = canvas.getContext('2d');
             
+            // Safety check for canvas context
+            if (!ctx) {
+                console.error('PixelArtGenerator: Failed to get 2D context for frame canvas');
+                return null;
+            }
+            
             ctx.imageSmoothingEnabled = false;
             
             // Clear with transparent background
@@ -559,6 +585,12 @@ export class PixelArtGenerator {
      */
     createAdvancedTexture(spriteData, textureKey, config) {
         try {
+            // Safety check for texture atlas
+            if (!this.textureAtlas || !this.textureAtlas.context) {
+                console.warn('PixelArtGenerator: Texture atlas not available, using individual texture');
+                return this.createIndividualTexture(spriteData, textureKey);
+            }
+            
             // Calculate optimal texture dimensions
             const dimensions = this.calculateOptimalTextureDimensions(spriteData);
             
@@ -672,11 +704,34 @@ export class PixelArtGenerator {
             canvas.height = 64;
             const ctx = canvas.getContext('2d');
             
+            // Safety check for canvas context
+            if (!ctx) {
+                console.error('PixelArtGenerator: Failed to get 2D context for fallback sprite');
+                return {
+                    textureKey: null,
+                    animationKeys: {},
+                    isFallback: true,
+                    error: 'Canvas context unavailable'
+                };
+            }
+            
             // Simple colored rectangle as fallback
             ctx.fillStyle = '#4A90E2';
             ctx.fillRect(16, 16, 32, 32);
             
             const fallbackKey = `fallback_${characterType}_${Date.now()}`;
+            
+            // Safety check for scene textures
+            if (!this.scene || !this.scene.textures) {
+                console.error('PixelArtGenerator: Scene or textures not available for fallback sprite');
+                return {
+                    textureKey: null,
+                    animationKeys: {},
+                    isFallback: true,
+                    error: 'Scene unavailable'
+                };
+            }
+            
             this.scene.textures.addCanvas(fallbackKey, canvas);
             
             return {
@@ -686,7 +741,12 @@ export class PixelArtGenerator {
             };
         } catch (error) {
             console.error('PixelArtGenerator: Error creating fallback sprite:', error);
-            return null;
+            return {
+                textureKey: null,
+                animationKeys: {},
+                isFallback: true,
+                error: error.message
+            };
         }
     }
 

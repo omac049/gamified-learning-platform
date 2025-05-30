@@ -2576,6 +2576,7 @@ export class CharacterSelectScene extends Scene {
             character: {
                 ...this.characterData,
                 name: this.characterData.name.trim(),
+                type: this.selectedCharacterType, // Add the character type ID (aria, titan, nexus)
                 typeName: charType.name,
                 bonuses: charType.bonuses,
                 level: 1,

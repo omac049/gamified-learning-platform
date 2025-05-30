@@ -1098,7 +1098,7 @@ export class UIManager extends GameSystem {
         this.scene.tweens.add({
             targets: timerFill,
             scaleX: 0,
-            duration: data.timeLimit,
+            duration: data.timeLimit || 20000, // Updated from 15000 to match new default
             ease: 'Linear',
             onComplete: () => {
                 // Time's up
@@ -1985,7 +1985,7 @@ export class UIManager extends GameSystem {
         this.scene.tweens.add({
             targets: this.mathTimerFill,
             scaleX: 0,
-            duration: data.timeLimit || 15000,
+            duration: data.timeLimit || 20000, // Updated from 15000 to match new default
             ease: 'Linear',
             onUpdate: () => {
                 const progress = this.mathTimerFill.scaleX;

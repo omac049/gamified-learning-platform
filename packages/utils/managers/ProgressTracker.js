@@ -86,6 +86,20 @@ export class ProgressTracker {
             console.log('ProgressTracker: Migrated save data to include characterProgression');
         }
         
+        // Fix character type field if missing
+        if (data.character && !data.character.type) {
+            // Try to infer type from character name or default to 'titan'
+            const characterName = data.character.name?.toLowerCase() || '';
+            if (characterName.includes('aria') || data.character.typeName === 'ARIA') {
+                data.character.type = 'aria';
+            } else if (characterName.includes('nexus') || data.character.typeName === 'NEXUS') {
+                data.character.type = 'nexus';
+            } else {
+                data.character.type = 'titan'; // Default fallback
+            }
+            console.log(`ProgressTracker: Migrated character type to '${data.character.type}'`);
+        }
+        
         // Ensure sessionStats exists
         if (!data.sessionStats) {
             data.sessionStats = {

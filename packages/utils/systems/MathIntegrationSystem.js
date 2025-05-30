@@ -22,7 +22,7 @@ export class MathIntegrationSystem extends GameSystem {
         // Question management
         this.currentQuestion = null;
         this.questionStartTime = 0;
-        this.questionTimeLimit = 15000; // 15 seconds
+        this.questionTimeLimit = 20000; // Increased from 15 to 20 seconds for more thinking time
         this.questionsAnswered = 0;
         this.correctAnswers = 0;
         
@@ -659,12 +659,12 @@ export class MathIntegrationSystem extends GameSystem {
         const accuracy = recentPerformance.filter(p => p.correct).length / recentPerformance.length;
         const avgResponseTime = recentPerformance.reduce((sum, p) => sum + p.responseTime, 0) / recentPerformance.length;
         
-        // Adjust based on performance
-        if (accuracy >= 0.8 && avgResponseTime < this.questionTimeLimit * 0.6) {
-            // Player is doing well, increase difficulty
+        // Adjust based on performance - made more forgiving
+        if (accuracy >= 0.85 && avgResponseTime < this.questionTimeLimit * 0.5) {
+            // Player is doing very well, increase difficulty
             this.increaseDifficulty();
-        } else if (accuracy <= 0.4 || avgResponseTime > this.questionTimeLimit * 0.9) {
-            // Player is struggling, decrease difficulty
+        } else if (accuracy <= 0.3 || avgResponseTime > this.questionTimeLimit * 0.95) {
+            // Player is struggling significantly, decrease difficulty
             this.decreaseDifficulty();
         }
     }
@@ -736,7 +736,7 @@ export class MathIntegrationSystem extends GameSystem {
         this.emit('quickChallengeStarted', {
             question: question.question,
             choices: question.choices,
-            timeLimit: 8000, // 8 seconds for quick challenge
+            timeLimit: 12000, // Increased from 8000ms to 12 seconds for quick challenge
             reward: 'Combat bonus for 10 seconds'
         });
         
@@ -1001,7 +1001,7 @@ export class MathIntegrationSystem extends GameSystem {
                 topic: this.selectOptimalTopic(),
                 level: Math.min(data.wave, 5)
             });
-        }, 2000); // 2 second delay
+        }, 500); // Reduced from 2000ms to 500ms for faster question appearance
     }
 
     onEnemyDefeated(data) {
@@ -1220,14 +1220,14 @@ export class MathIntegrationSystem extends GameSystem {
     }
 
     getContextualTimeLimit(triggerType) {
-        // Different time limits based on context
+        // Different time limits based on context - all increased for better user experience
         switch (triggerType) {
             case 'lowHealth':
-                return 8000; // Shorter time for emergencies
+                return 12000; // Increased from 8000ms to 12 seconds for emergency situations
             case 'bossEncounter':
-                return 20000; // More time for boss questions
+                return 25000; // Increased from 20000ms to 25 seconds for boss questions
             case 'enemyEncounter':
-                return 12000; // Medium time for combat
+                return 18000; // Increased from 12000ms to 18 seconds for combat
             default:
                 return this.questionTimeLimit;
         }

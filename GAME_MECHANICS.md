@@ -1,394 +1,400 @@
-# 🎮 Game Mechanics Documentation
+# 🤖 Combat System Game Mechanics Documentation
 
 ## Overview
 
-This document provides detailed technical information about the game mechanics implemented in the Enhanced Math Combat Arena, focusing on the contextual math integration and advanced pause systems.
+This document provides detailed technical information about the Universal Combat System implemented across multiple subjects in the Cyber Academy Robot Command Center. The system transforms educational content into epic robot battles with character progression and equipment integration.
 
-## 🎯 Core Game Loop
+## ⚔️ Universal Combat System
 
-### 1. **Player Movement & Combat**
-- **Movement**: WASD/Arrow keys with arena boundary constraints
-- **Shooting**: Space bar with configurable fire rate and math power bonuses
-- **Health System**: 100 HP with visual feedback and emergency triggers
-- **Energy System**: 100 energy for special abilities
-- **Shield System**: 50 shield points for damage absorption
+### 1. **Core Combat Loop**
+- **Answer Selection**: Player chooses answers to educational questions
+- **Combat Resolution**: Correct answers trigger player robot attacks, incorrect answers trigger enemy attacks
+- **Stat Integration**: Character stats (attack, defense, speed, accuracy, luck, intelligence) affect all combat
+- **Visual Feedback**: Robot animations, damage numbers, and screen effects provide immediate feedback
+- **Progression**: XP and coin rewards based on performance with character bonuses
 
-### 2. **Enemy System**
-- **Spawn Mechanics**: Adaptive spawn rates based on wave progression
-- **Enemy Types**: Multiple enemy variants with different health, speed, and point values
-- **AI Behavior**: Simple downward movement with collision detection
-- **Visual Effects**: Glow effects and particle systems for enhanced feedback
+### 2. **Character System**
+- **Three Unique Characters**: ARIA (Stealth), TITAN (Tank), NEXUS (Tech)
+- **Level Progression**: Each level increases all combat stats
+- **Stat Scaling**: Base stats + level bonuses + equipment effects
+- **Cross-Subject Benefits**: Character builds affect performance in all subjects
 
-### 3. **Math Integration Triggers**
+### 3. **Equipment Integration**
 
-#### **Enemy Encounter Trigger**
+#### **Weapon Effects**
 ```javascript
-Trigger Conditions:
-- 30% chance when enemy spawns
-- 5-second cooldown between triggers
-- Generates combat-themed questions
+Plasma Sword: +25% attack power
+Neural Disruptor: +50% attack power  
+Quantum Cannon: +100% attack power
 
-Example Questions:
-- "You deal 15 damage to each of 3 enemies. Total damage?"
-- "Enemy has 80 HP. You deal 25 damage. Remaining HP?"
+Combat Impact:
+- Increases damage from correct answers
+- Affects score multipliers
+- Visual weapon effects on robot
 ```
 
-#### **Low Health Emergency Trigger**
+#### **Shield Effects**
 ```javascript
-Trigger Conditions:
-- Activates when player health ≤ 30%
-- 10-second cooldown
-- Simplified questions for quick response
+Energy Barrier: +25 defense
+Adaptive Armor: +35 defense
+Quantum Shield: +50 defense
 
-Effects:
-- Correct: Double health restoration (+20 HP)
-- Incorrect: Additional health loss (-7.5 HP)
+Combat Impact:
+- Reduces penalties from wrong answers
+- Provides damage mitigation
+- Visual shield effects during enemy attacks
 ```
 
-#### **Boss Encounter Trigger**
+#### **Tech Effects**
 ```javascript
-Trigger Conditions:
-- 80% chance during boss fights
-- No cooldown (one-time per boss)
-- Challenging multiplication problems
+Hint Scanner: +25% accuracy
+Time Dilator: +15 second bonus
+Answer Analyzer: +35% accuracy
 
-Rewards:
-- Super Damage mode (2x damage, 10 seconds)
-- Invulnerability (3 seconds)
-- Special visual effects
+Combat Impact:
+- Provides hint assistance
+- Extends time limits
+- Improves answer precision
 ```
 
-#### **Power-Up Request Trigger**
+#### **Core Effects**
 ```javascript
-Trigger Conditions:
-- 100% chance when ability requested
-- 2-second cooldown
-- Power-specific themed questions
+XP Amplifier: +50% intelligence
+Coin Magnet: +100% luck
+Streak Keeper: Protects answer streaks
 
-Examples:
-- Shield: "Shield power: 12 × 3 = ?"
-- Energy: "Energy boost calculation"
+Combat Impact:
+- Boosts experience gains
+- Increases coin rewards
+- Prevents streak loss on wrong answers
 ```
 
-## ⏸️ Advanced Pause System
+## 🎯 Subject-Specific Combat Integration
 
-### **Pause State Management**
+### **Week 1: Math Combat Arena**
 ```javascript
-Pause Triggers:
-- ESC key press
-- P key press
-- UI pause button click
+Combat Mechanics:
+- Calculation-based damage scaling
+- Math power system integration
+- Arithmetic operation themes
+- Stat bonuses for TITAN character
 
-System Behavior:
-- Physics engine pause
-- Timer suspension
-- Input state preservation
-- Visual overlay display
+Question Types:
+- Basic arithmetic (addition, subtraction)
+- Multiplication and division
+- Word problems with combat themes
+- Progressive difficulty scaling
+
+Visual Elements:
+- Mathematical damage calculations
+- Number-based attack effects
+- Calculator-style UI elements
+- Geometric combat patterns
 ```
 
-### **Pause UI Components**
-- **Background Overlay**: Semi-transparent black (70% opacity)
-- **Pause Panel**: Styled container with rounded corners and glow
-- **Resume Button**: Interactive with hover effects
-- **Main Menu Button**: Navigation with error handling
-- **Instructions Text**: Clear user guidance
-
-### **State Restoration**
-- **Physics Resume**: Proper physics engine restart
-- **Timer Continuation**: Seamless timer restoration
-- **Input Reactivation**: All controls remain functional
-- **Visual Cleanup**: Overlay removal with smooth transitions
-
-## 🧮 Math Integration System
-
-### **Question Generation**
-
-#### **Difficulty Levels**
+### **Week 2: Reading Combat Arena**
 ```javascript
-Level 1: Basic operations (1-10)
-Level 2: Intermediate (10-50)
-Level 3: Advanced (50-100)
-Level 4: Multi-digit operations
-Level 5: Word problems
+Combat Mechanics:
+- Comprehension-based accuracy bonuses
+- Reading speed affects time bonuses
+- Vocabulary challenges
+- Stat bonuses for ARIA character
+
+Question Types:
+- Reading comprehension passages
+- Vocabulary definitions
+- Story analysis questions
+- Character motivation queries
+
+Visual Elements:
+- Text-based attack animations
+- Word collection mechanics
+- Literary-themed combat effects
+- Cyber-enhanced reading interface
 ```
 
-#### **Topic Progression**
+### **Week 3: Science Combat Lab** (Combat-Ready Framework)
 ```javascript
-Addition: { level: 1-5, mastery: 0-1 }
-Subtraction: { level: 1-5, mastery: 0-1 }
-Multiplication: { level: 1-5, mastery: 0-1 }
-Division: { level: 1-5, mastery: 0-1 }
-Fractions: { level: 0-5, mastery: 0-1 }
-Decimals: { level: 0-5, mastery: 0-1 }
+Combat Mechanics:
+- Experimental accuracy bonuses
+- Scientific method integration
+- Tech equipment synergy
+- Stat bonuses for NEXUS character
+
+Planned Question Types:
+- Scientific method steps
+- Experiment analysis
+- Chemical reactions
+- Physics calculations
+
+Planned Visual Elements:
+- Laboratory-themed combat arena
+- Experimental equipment integration
+- Chemical reaction effects
+- Scientific instrument UI
 ```
 
-### **Adaptive Difficulty Algorithm**
-```javascript
-Performance Tracking:
-- Last 20 questions analyzed
-- Accuracy rate calculation
-- Response time evaluation
+## 🤖 Character Stat System
 
-Adjustment Rules:
-- Accuracy ≥ 80% + Fast response → Increase difficulty
-- Accuracy ≤ 40% + Slow response → Decrease difficulty
-- Mastery ≥ 0.9 → Level advancement
+### **Base Stat Calculations**
+```javascript
+// Level scaling formula
+baseStats = {
+    attackPower: 1.0 + (level - 1) * 0.05,  // +5% per level
+    defense: (level - 1) * 2,               // +2 defense per level
+    speed: 30 + (level - 1) * 1,            // +1 second per level
+    accuracy: (level - 1) * 3,              // +3% accuracy per level
+    luck: (level - 1) * 2,                  // +2% luck per level
+    energy: 100 + (level - 1) * 5,          // +5 energy per level
+    intelligence: (level - 1) * 3           // +3% intelligence per level
+}
+
+// Character type bonuses
+ARIA: +10% attack, +15% accuracy, +5 speed
+TITAN: +20% attack, +10 defense, +20 energy
+NEXUS: +20% intelligence, +10% accuracy, +10% luck
 ```
 
-### **Contextual Question Themes**
-
-#### **Combat Questions**
-- Damage calculations
-- Enemy health scenarios
-- Weapon effectiveness
-- Battle statistics
-
-#### **Emergency Questions**
-- Simple addition (1-10)
-- Quick mental math
-- Time-pressured scenarios
-
-#### **Boss Questions**
-- Complex multiplication
-- Multi-step problems
-- Strategic calculations
-
-#### **Power-Up Questions**
-- Ability-specific math
-- Resource management
-- Enhancement calculations
-
-## 🎯 Immediate Gameplay Effects
-
-### **Correct Answer Bonuses**
+### **Equipment Stat Bonuses**
 ```javascript
-Health Restoration:
-- Standard: +10 HP
-- Emergency context: +20 HP
-- Visual: Green healing particles
-
-Energy Boost:
-- Standard: +15 energy
-- Combat context: +20 energy
-- Visual: Blue energy sparkles
-
-Damage Multiplier:
-- 1.5x damage for 5 seconds
-- Combat context: 2.0x for 8 seconds
-- Visual: Weapon glow effect
-
-Shield Regeneration:
-- +20 shield points
-- Emergency context: +30 points
-- Visual: Cyan shield shimmer
-
-Math Power Gain:
-- Base: +25 points
-- Time bonus: +1-10 additional
-- Visual: Yellow power surge
+// Applied after base stats calculation
+applyEquipmentStatsBonus(stats) {
+    // Weapon bonuses to attack power
+    // Shield bonuses to defense
+    // Tech bonuses to accuracy/speed
+    // Core bonuses to intelligence/luck/energy
+    return enhancedStats;
+}
 ```
 
-### **Incorrect Answer Penalties**
+## ⚡ Combat Resolution System
+
+### **Correct Answer Flow**
 ```javascript
-Health Loss:
-- Standard: -5 HP
-- Emergency context: -7.5 HP
-- Visual: Red damage flash
-
-Energy Drain:
-- Standard: -10 energy
-- Combat context: -15 energy
-- Visual: Energy bar flicker
-
-Vulnerability:
-- 3-second damage vulnerability
-- Emergency context: 5 seconds
-- Visual: Red player outline
-
-Math Power Loss:
-- Standard: -10 points
-- Boss context: -20 points
-- Visual: Power bar drain effect
+1. Player selects correct answer
+2. Calculate damage: baseDamage × characterStats.attackPower
+3. Apply equipment multipliers
+4. Player robot performs attack animation
+5. Enemy takes damage with visual feedback
+6. Create floating damage numbers
+7. Award score bonus with stat multipliers
+8. Grant XP with intelligence bonus
+9. Award coins with luck bonus
+10. Check for enemy defeat and spawn new enemy
 ```
 
-## 🔥 Streak System
-
-### **Streak Bonuses**
+### **Incorrect Answer Flow**
 ```javascript
-3 Streak: Rapid Fire
-- Effect: Increased fire rate
-- Duration: 5 seconds
-- Visual: Weapon trail effect
-
-5 Streak: Invulnerability
-- Effect: Immune to damage
-- Duration: 2 seconds
-- Visual: Golden player glow
-
-7 Streak: Time Slowdown
-- Effect: Slower enemy movement
-- Duration: 4 seconds
-- Visual: Blue time distortion
-
-10 Streak: Super Damage
-- Effect: 3x damage multiplier
-- Duration: 8 seconds
-- Visual: Rainbow weapon effects
+1. Player selects incorrect answer
+2. Calculate penalty: basePenalty - characterStats.defense
+3. Apply equipment damage reduction
+4. Enemy robot performs attack animation
+5. Player receives penalty with visual feedback
+6. Create floating penalty numbers
+7. Reset streak (unless Streak Keeper equipped)
+8. Apply score penalty
+9. Continue combat with feedback
 ```
 
-### **Streak Tracking**
-- **Current Streak**: Resets on incorrect answer
-- **Maximum Streak**: Persistent record
-- **Visual Feedback**: Color-coded streak display
-- **Audio Cues**: Sound effects for milestone achievements
-
-## 🎨 Visual Feedback Systems
-
-### **Particle Effects**
+### **Damage Calculation Examples**
 ```javascript
-Correct Answer:
-- Green explosion particles
-- Radial burst pattern
-- 1.2-second duration
+// Math Combat Example
+baseDamage = 25
+characterAttack = 1.2 (Level 5 TITAN)
+weaponBonus = 1.5 (Neural Disruptor)
+finalDamage = 25 × 1.2 × 1.5 = 45 damage
 
-Incorrect Answer:
-- Red screen flash
-- Camera shake effect
-- 0.5-second duration
-
-Hit Effects:
-- Yellow impact particles
-- Directional spray pattern
-- 0.6-second duration
-
-Explosion Effects:
-- Multi-colored particles
-- Large radial burst
-- 1.0-second duration
+// Reading Combat Example  
+baseDamage = 25
+characterAttack = 1.1 (Level 3 ARIA)
+accuracyBonus = 1.25 (Answer Analyzer)
+finalDamage = 25 × 1.1 × 1.25 = 34 damage
 ```
 
-### **Screen Effects**
+## 🎮 Visual Combat System
+
+### **Robot Graphics System**
 ```javascript
-Damage Flash:
-- Red overlay (40% opacity)
-- 250ms fade duration
-- Camera shake (15ms intensity)
+// Character-specific robot designs
+createRobotGraphic(charType) {
+    specs = getRobotSpecifications(charType);
+    // Create base, torso, head, weapons
+    // Apply character-specific colors and features
+    // Add equipment visual effects
+    return robotContainer;
+}
 
-Success Flash:
-- Green overlay (25% opacity)
-- 400ms fade duration
-- Positive audio feedback
-
-Math Power Surge:
-- Yellow glow effect
-- Pulsing animation
-- 300ms duration
+// Robot specifications by character
+ARIA: Sleek, angular, stealth-focused design
+TITAN: Bulky, armored, heavy assault design  
+NEXUS: Modular, crystalline, tech-focused design
 ```
 
-### **UI Animations**
+### **Combat Animations**
 ```javascript
-Health Bar:
-- Color transitions (green → yellow → red)
-- Smooth value interpolation
-- Damage flash effects
+// Player attack sequence
+performPlayerAttack(damage) {
+    1. Robot moves forward with attack animation
+    2. Create attack effect at enemy position
+    3. Enemy reacts with hit animation
+    4. Display floating damage number
+    5. Screen shake for impact feedback
+    6. Return robot to idle position
+}
 
-Math Power Bar:
-- Glow intensity based on level
-- Fill animation on gain/loss
-- Color coding for power levels
-
-Streak Display:
-- Scale animation on increment
-- Color progression with streak level
-- Pulsing effect for high streaks
+// Enemy attack sequence
+performEnemyAttack(penalty) {
+    1. Enemy robot moves forward
+    2. Create attack effect at player position
+    3. Player robot reacts with hit animation
+    4. Display floating penalty number
+    5. Screen shake for impact
+    6. Return enemy to idle position
+}
 ```
 
-## 🔧 Performance Optimizations
-
-### **Object Pooling**
+### **Visual Effects System**
 ```javascript
-Damage Numbers:
-- Pool size: 50 objects
-- Automatic recycling
-- Memory-efficient reuse
+// Attack effects
+createAttackEffect(x, y, color) {
+    // Expanding circle with particles
+    // Color-coded by damage type
+    // Particle burst animation
+}
 
-Particles:
-- Pool size: 200 objects
-- Lifecycle management
-- Performance monitoring
+// Floating numbers
+createFloatingDamageNumber(x, y, damage, color) {
+    // Animated text rising and fading
+    // Color indicates damage/penalty type
+    // Size scales with damage amount
+}
 
-UI Elements:
-- Cached references
-- Minimal DOM manipulation
-- Update throttling
+// Equipment effects
+applyEquipmentVisuals(robot, equippedItems) {
+    // Weapon glow effects
+    // Shield shimmer animations
+    // Tech scanner overlays
+    // Core energy pulsing
+}
 ```
 
-### **Update Optimization**
+## 📊 Progression Integration
+
+### **Experience System**
 ```javascript
-UI Updates:
-- Dirty flag system
-- Throttled refresh rates
-- State change detection
+// Base XP with intelligence multiplier
+addExperience(baseAmount) {
+    stats = getCharacterStats();
+    multiplier = 1 + (stats.intelligence / 100);
+    finalXP = Math.floor(baseAmount × multiplier);
+    awardCharacterExperience(finalXP);
+}
 
-Physics Updates:
-- Fixed timestep integration
-- Collision optimization
-- Spatial partitioning
-
-Rendering:
-- Depth sorting
-- Culling off-screen objects
-- Batch rendering
+// Subject-specific XP bonuses
+Math: Base 15 XP per correct answer
+Reading: Base 15 XP per correct answer  
+Science: Base 20 XP per correct answer (planned)
 ```
 
-## 🎓 Educational Effectiveness
-
-### **Learning Principles Applied**
-1. **Immediate Feedback**: Instant visual and gameplay consequences
-2. **Contextual Learning**: Math problems themed to game situations
-3. **Progressive Difficulty**: Adaptive challenge based on performance
-4. **Spaced Repetition**: Regular practice with varied intervals
-5. **Intrinsic Motivation**: Math skills directly enhance gameplay
-
-### **Engagement Mechanisms**
-1. **Flow State**: Balanced challenge and skill progression
-2. **Achievement Systems**: Streak bonuses and mastery tracking
-3. **Visual Rewards**: Particle effects and screen enhancements
-4. **Narrative Integration**: Math as essential game mechanic
-5. **Social Elements**: Score tracking and performance metrics
-
-## 🔍 Analytics & Tracking
-
-### **Performance Metrics**
+### **Coin System**
 ```javascript
-Tracked Data:
-- Questions answered per session
-- Accuracy rate by topic
-- Response time analysis
-- Streak achievement frequency
-- Math power utilization
+// Base coins with luck multiplier
+addCoins(baseAmount, reason) {
+    stats = getCharacterStats();
+    multiplier = 1 + (stats.luck / 100);
+    finalCoins = Math.floor(baseAmount × multiplier);
+    awardCoins(finalCoins, reason);
+}
 
-Learning Analytics:
-- Topic mastery progression
-- Difficulty adjustment frequency
-- Error pattern analysis
-- Engagement duration
-- Retry behavior
+// Subject-specific coin rewards
+Math: 10 coins per correct answer
+Reading: 10 coins per correct answer
+Bonus: Equipment effects can double rewards
 ```
 
-### **Adaptive Algorithms**
+### **Streak System**
 ```javascript
-Difficulty Adjustment:
-- Performance window: 5 questions
-- Accuracy threshold: 40-80%
-- Response time factor: 0.6-0.9 of time limit
-- Mastery requirement: 90% for advancement
+// Streak tracking with protection
+onCorrectAnswer() {
+    streak++;
+    maxStreak = Math.max(maxStreak, streak);
+    // Apply streak bonuses at milestones
+}
 
-Question Selection:
-- Weighted topic selection
-- Contextual appropriateness
-- Difficulty matching
-- Variety maintenance
+onIncorrectAnswer() {
+    if (!hasStreakKeeper()) {
+        streak = 0;
+    } else {
+        streak = Math.max(1, streak); // Protect streak
+        showStreakKeeperEffect();
+    }
+}
 ```
 
-This comprehensive mechanics system creates a seamless integration between educational content and engaging gameplay, ensuring that mathematical learning becomes an essential and enjoyable part of the gaming experience. 
+## 🔧 Technical Implementation
+
+### **Event-Driven Architecture**
+```javascript
+// Subject scenes emit events
+this.events.emit('subjectAnswerCorrect', {
+    subject: 'math',
+    difficulty: 'medium',
+    timeSpent: 3000
+});
+
+// Combat system responds to events
+this.events.on('subjectAnswerCorrect', (data) => {
+    damage = this.combatSystem.onCorrectAnswer(data);
+    // Handle combat resolution
+});
+```
+
+### **Modular Integration**
+```javascript
+// Any scene can integrate combat
+class WeekXScene extends Scene {
+    create() {
+        this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+        this.combatSystem.init();
+        this.setupCombatEventListeners();
+    }
+    
+    setupCombatEventListeners() {
+        this.events.on('subjectAnswerCorrect', this.onCorrectAnswer);
+        this.events.on('subjectAnswerIncorrect', this.onIncorrectAnswer);
+    }
+}
+```
+
+### **Performance Optimizations**
+```javascript
+// Reusable combat system across subjects
+// Efficient robot graphics with containers
+// Throttled animation updates
+// Memory management with proper cleanup
+// Object pooling for particles and effects
+```
+
+## 🌟 Future Enhancements
+
+### **Phase 2: Advanced Combat**
+- Special abilities per character type
+- Boss battles with unique mechanics
+- Weapon-specific attack animations
+- Combo system for answer streaks
+
+### **Phase 3: Multiplayer Combat**
+- Robot vs Robot PvP battles
+- Team-based combat scenarios
+- Tournament mode with rankings
+- Guild system integration
+
+### **Phase 4: Advanced Progression**
+- Prestige system for max-level characters
+- Legendary equipment tiers
+- Achievement-based unlocks
+- Seasonal combat events
+
+---
+
+**The Universal Combat System transforms every educational interaction into an epic battle, making learning an adventure where knowledge is power!** ⚔️🤖✨ 

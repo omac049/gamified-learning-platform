@@ -676,18 +676,18 @@ export class EducationalMenuScene extends Scene {
 
     createWeekCards(x, y, maxWidth) {
         const weeks = [
-            { number: 1, title: "Math Battles", theme: "Number Games", color: this.uiColors.success, icon: "⚔️", difficulty: "Easy" },
-            { number: 2, title: "Word Adventures", theme: "Language Fun", color: this.uiColors.warning, icon: "📚", difficulty: "Easy" },
-            { number: 3, title: "Science Fun", theme: "Cool Experiments", color: this.uiColors.neonPurple, icon: "🔬", difficulty: "Medium" },
-            { number: 4, title: "History Mystery", theme: "Time Detective", color: this.uiColors.error, icon: "🚀", difficulty: "Medium" },
-            { number: 5, title: "Super Challenge", theme: "All Subjects", color: this.uiColors.info, icon: "👑", difficulty: "Hard" },
-            { number: 6, title: "Final Game", theme: "Big Challenge", color: this.uiColors.accent, icon: "🎓", difficulty: "Expert" }
+            { number: 1, title: "Math Combat Arena", theme: "Epic Robot Battles", color: this.uiColors.success, icon: "⚔️", difficulty: "Easy", status: "✅ Full Combat" },
+            { number: 2, title: "Reading Combat Arena", theme: "Cyber Battle Challenges", color: this.uiColors.warning, icon: "📚", difficulty: "Easy", status: "✅ Full Combat" },
+            { number: 3, title: "Science Combat Lab", theme: "Experimental Battles", color: this.uiColors.neonPurple, icon: "🔬", difficulty: "Medium", status: "🔄 Combat Ready" },
+            { number: 4, title: "History Battle Arena", theme: "Time War Missions", color: this.uiColors.error, icon: "🚀", difficulty: "Medium", status: "⏳ Combat Planned" },
+            { number: 5, title: "Multi-Subject Combat", theme: "Ultimate Challenge", color: this.uiColors.info, icon: "👑", difficulty: "Hard", status: "⏳ Boss Battles" },
+            { number: 6, title: "Final Robot War", theme: "Legendary Battle", color: this.uiColors.accent, icon: "🎓", difficulty: "Expert", status: "⏳ Epic Finale" }
         ];
         
         // Calculate card layout
         const cardsPerRow = maxWidth > 800 ? 3 : (maxWidth > 500 ? 2 : 1);
         const cardWidth = (maxWidth - (this.layout.cardSpacing * (cardsPerRow - 1))) / cardsPerRow;
-        const cardHeight = 140;
+        const cardHeight = 160; // Increased height for combat status
         
         weeks.forEach((week, index) => {
             const row = Math.floor(index / cardsPerRow);
@@ -781,6 +781,28 @@ export class EducationalMenuScene extends Scene {
             fontStyle: 'bold'
         }).setOrigin(0.5);
         cardContainer.add(difficultyText);
+        
+        // Combat status badge (new feature)
+        if (week.status) {
+            const statusBg = this.add.graphics();
+            let statusBgColor = this.uiColors.success;
+            if (week.status.includes('⏳')) statusBgColor = this.uiColors.warning;
+            if (week.status.includes('🔄')) statusBgColor = this.uiColors.info;
+            
+            statusBg.fillStyle(statusBgColor, 0.3);
+            statusBg.fillRoundedRect(110, 100, width - 130, 20, 10);
+            statusBg.lineStyle(1, statusBgColor, 0.8);
+            statusBg.strokeRoundedRect(110, 100, width - 130, 20, 10);
+            cardContainer.add(statusBg);
+            
+            const statusDisplayText = this.add.text(110 + (width - 130) / 2, 110, week.status, {
+                fontSize: '9px',
+                fontFamily: 'Courier, monospace',
+                fill: '#ffffff',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            cardContainer.add(statusDisplayText);
+        }
         
         // Make the entire card clickable if unlocked
         if (isUnlocked) {
@@ -987,67 +1009,155 @@ export class EducationalMenuScene extends Scene {
     }
 
     showHelpModal() {
-        // Create help modal with modern design
-        const modalBg = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
-            .setOrigin(0, 0)
-            .setDepth(100);
-        
-        // Use safe interactive setup for modal background
-        if (this.safeSetInteractive(modalBg, null)) {
-            const modalPanel = this.add.graphics();
-            modalPanel.fillStyle(this.uiColors.bgCard, 0.95);
-            modalPanel.fillRoundedRect(this.scale.width / 2 - 300, this.scale.height / 2 - 200, 600, 400, 16);
-            modalPanel.lineStyle(2, this.uiColors.neonBlue, 0.8);
-            modalPanel.strokeRoundedRect(this.scale.width / 2 - 300, this.scale.height / 2 - 200, 600, 400, 16);
-            modalPanel.setDepth(101);
+        try {
+            // Safety check for scene readiness
+            if (!this.add || !this.scale || !this.uiColors) {
+                console.warn('EducationalMenuScene: Cannot show help modal - scene not ready');
+                return;
+            }
             
-            const helpTitle = this.add.text(this.scale.width / 2, this.scale.height / 2 - 150, 'HOW TO PLAY', {
-                fontSize: '24px',
-                fontFamily: 'Courier, monospace',
-                fill: '#00ffff',
-                fontStyle: 'bold'
-            }).setOrigin(0.5).setDepth(102);
+            // Create help modal with modern design
+            const modalBg = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
+                .setOrigin(0, 0)
+                .setDepth(100);
             
-            const helpText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 50, 
-                'Welcome to Cyber Academy!\n\n' +
-                '🎮 Click on game cards to play\n' +
-                '💰 Collect coins by playing games\n' +
-                '🔧 Use coins to upgrade your robot\n' +
-                '📊 Check your progress anytime\n' +
-                '🏆 Complete all 6 games to win!\n\n' +
-                'Have fun learning!', {
-                fontSize: '16px',
-                fontFamily: 'Courier, monospace',
-                fill: '#ffffff',
-                align: 'center',
-                lineSpacing: 8
-            }).setOrigin(0.5).setDepth(102);
-            
-            const closeBtn = this.add.rectangle(this.scale.width / 2, this.scale.height / 2 + 150, 120, 40, this.uiColors.error, 0.8)
-                .setStrokeStyle(2, this.uiColors.error)
-                .setDepth(103);
-            
-            // Use safe interactive setup for close button
-            if (this.safeSetInteractive(closeBtn, null, { useHandCursor: true })) {
-                const closeBtnText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 150, 'CLOSE', {
-                    fontSize: '16px',
+            // Use safe interactive setup for modal background
+            if (this.safeSetInteractive(modalBg, null)) {
+                const modalPanel = this.add.graphics();
+                modalPanel.fillStyle(this.uiColors.bgCard, 0.95);
+                modalPanel.fillRoundedRect(this.scale.width / 2 - 350, this.scale.height / 2 - 250, 700, 500, 16);
+                modalPanel.lineStyle(2, this.uiColors.neonBlue, 0.8);
+                modalPanel.strokeRoundedRect(this.scale.width / 2 - 350, this.scale.height / 2 - 250, 700, 500, 16);
+                modalPanel.setDepth(101);
+                
+                // Help title with cyber styling
+                const helpTitle = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, '🤖 CYBER ACADEMY COMBAT GUIDE ⚔️', {
+                    fontSize: '24px',
+                    fontFamily: 'Courier, monospace',
+                    fill: '#00ffff',
+                    fontStyle: 'bold',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(0.5).setDepth(102);
+                
+                // Combat system explanation
+                const helpContent = `🎮 UNIVERSAL COMBAT SYSTEM
+    
+    ⚔️ ROBOT BATTLES IN EVERY SUBJECT:
+    • Math Combat Arena: Solve equations to power robot attacks
+    • Reading Combat Arena: Answer questions to trigger epic battles
+    • Science Combat Lab: Experiments fuel your robot's abilities
+    • All subjects feature the same combat mechanics!
+    
+    🤖 CHARACTER PROGRESSION:
+    • ARIA (Stealth): High speed and accuracy bonuses
+    • TITAN (Tank): Maximum defense and attack power
+    • NEXUS (Tech): Intelligence and energy optimization
+    
+    ⚡ EQUIPMENT EFFECTS:
+    • Weapons: Increase attack power across ALL subjects
+    • Shields: Boost defense in every combat scenario
+    • Tech: Enhance accuracy and special abilities
+    • Cores: Provide energy and intelligence bonuses
+    
+    🏆 PROGRESSION SYSTEM:
+    • Gain XP from correct answers in any subject
+    • Level up to unlock new equipment and abilities
+    • Equipment purchases affect ALL learning areas
+    • Character builds matter in every game mode
+    
+    🎯 COMBAT MECHANICS:
+    • Correct answers = Your robot attacks enemies
+    • Incorrect answers = Enemy robots attack you
+    • Damage based on your character stats and equipment
+    • Visual feedback with attack animations and effects
+    
+    💰 REWARDS & UPGRADES:
+    • Earn coins from victories in any subject
+    • Purchase equipment that works everywhere
+    • Unlock new combat abilities and animations
+    • Build the ultimate educational warrior robot!
+    
+    Press ESC or click CLOSE to return to the academy!`;
+                
+                const helpText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 50, helpContent, {
+                    fontSize: '12px',
                     fontFamily: 'Courier, monospace',
                     fill: '#ffffff',
+                    align: 'left',
+                    lineSpacing: 4,
+                    wordWrap: { width: 650 },
+                    stroke: '#000000',
+                    strokeThickness: 1
+                }).setOrigin(0.5).setDepth(102);
+                
+                // Close button with cyber styling
+                const closeButton = this.add.rectangle(this.scale.width / 2, this.scale.height / 2 + 200, 200, 50, 0x000000, 0.8)
+                    .setStrokeStyle(3, this.uiColors.neonGreen)
+                    .setDepth(102);
+                
+                const closeText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 200, '>> CLOSE GUIDE <<', {
+                    fontSize: '16px',
+                    fontFamily: 'Courier, monospace',
+                    fill: '#00ff00',
                     fontStyle: 'bold'
                 }).setOrigin(0.5).setDepth(103);
                 
-                closeBtn.on('pointerdown', () => {
-                    modalBg.destroy();
-                    modalPanel.destroy();
-                    helpTitle.destroy();
-                    helpText.destroy();
-                    closeBtn.destroy();
-                    closeBtnText.destroy();
-                });
+                // Safe interactive setup for close button
+                if (this.safeSetInteractive(closeButton, null)) {
+                    closeButton.on('pointerover', () => {
+                        closeButton.setStrokeStyle(4, this.uiColors.neonYellow);
+                        closeText.setFill('#ffff00');
+                    });
+                    
+                    closeButton.on('pointerout', () => {
+                        closeButton.setStrokeStyle(3, this.uiColors.neonGreen);
+                        closeText.setFill('#00ff00');
+                    });
+                    
+                    closeButton.on('pointerdown', () => {
+                        // Clean up modal elements
+                        [modalBg, modalPanel, helpTitle, helpText, closeButton, closeText].forEach(element => {
+                            if (element && element.destroy) {
+                                element.destroy();
+                            }
+                        });
+                    });
+                }
                 
-                modalBg.on('pointerdown', () => {
-                    closeBtn.emit('pointerdown');
+                // ESC key to close
+                if (this.input && this.input.keyboard) {
+                    const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+                    const escHandler = () => {
+                        [modalBg, modalPanel, helpTitle, helpText, closeButton, closeText].forEach(element => {
+                            if (element && element.destroy) {
+                                element.destroy();
+                            }
+                        });
+                        escKey.off('down', escHandler);
+                    };
+                    escKey.on('down', escHandler);
+                }
+                
+                // Entrance animation
+                [modalBg, modalPanel, helpTitle, helpText, closeButton, closeText].forEach((element, index) => {
+                    if (element) {
+                        element.setAlpha(0);
+                        this.tweens.add({
+                            targets: element,
+                            alpha: 1,
+                            duration: 300,
+                            delay: index * 50,
+                            ease: 'Power2.easeOut'
+                        });
+                    }
                 });
+            }
+        } catch (error) {
+            console.error('EducationalMenuScene: Error showing help modal:', error);
+            // Show simple alert as fallback
+            if (window.alert) {
+                window.alert('Help system temporarily unavailable. Please try again.');
             }
         }
     }
@@ -1221,6 +1331,12 @@ export class EducationalMenuScene extends Scene {
             switch (weekNumber) {
                 case 1:
                     this.scene.start('Week1MathScene');
+                    break;
+                case 2:
+                    this.scene.start('Week2ReadingScene');
+                    break;
+                case 3:
+                    this.scene.start('Week3ScienceScene');
                     break;
                 default:
                     console.warn(`Week ${weekNumber} not implemented yet`);
@@ -1681,26 +1797,85 @@ export class EducationalMenuScene extends Scene {
      * This is the most advanced procedural robot generator ever created!
      */
     createRobotGraphic(x, y, charType) {
-        console.log(`Creating ultra-detailed robot graphic for ${charType.name} at (${x}, ${y})`);
-        
-        // Create main container for the robot
-        const robotContainer = this.add.container(x, y);
-        
-        // Robot specifications based on character type
-        const robotSpecs = this.getRobotSpecifications(charType);
-        
-        // Create robot components in layers
-        this.createRobotShadow(robotContainer, robotSpecs);
-        this.createRobotBase(robotContainer, robotSpecs);
-        this.createRobotTorso(robotContainer, robotSpecs);
-        this.createRobotArms(robotContainer, robotSpecs);
-        this.createRobotHead(robotContainer, robotSpecs);
-        this.createRobotDetails(robotContainer, robotSpecs);
-        this.createRobotWeapons(robotContainer, robotSpecs);
-        this.createRobotEffects(robotContainer, robotSpecs);
-        this.createRobotAnimations(robotContainer, robotSpecs);
-        
-        return robotContainer;
+        try {
+            // Safety checks
+            if (!this.add || !charType) {
+                console.warn('EducationalMenuScene: Cannot create robot graphic - scene not ready or invalid charType');
+                return this.createSimpleRobotFallback(x, y, charType);
+            }
+            
+            console.log(`Creating ultra-detailed robot graphic for ${charType.name} at (${x}, ${y})`);
+            
+            // Create main container for the robot
+            const robotContainer = this.add.container(x, y);
+            
+            // Robot specifications based on character type
+            const robotSpecs = this.getRobotSpecifications(charType);
+            
+            // Create robot components in layers with error handling
+            try {
+                this.createRobotShadow(robotContainer, robotSpecs);
+                this.createRobotBase(robotContainer, robotSpecs);
+                this.createRobotTorso(robotContainer, robotSpecs);
+                this.createRobotArms(robotContainer, robotSpecs);
+                this.createRobotHead(robotContainer, robotSpecs);
+                this.createRobotDetails(robotContainer, robotSpecs);
+                this.createRobotWeapons(robotContainer, robotSpecs);
+                this.createRobotEffects(robotContainer, robotSpecs);
+                this.createRobotAnimations(robotContainer, robotSpecs);
+            } catch (componentError) {
+                console.error('EducationalMenuScene: Error creating robot components:', componentError);
+                // Continue with what we have
+            }
+            
+            return robotContainer;
+            
+        } catch (error) {
+            console.error('EducationalMenuScene: Error creating robot graphic:', error);
+            return this.createSimpleRobotFallback(x, y, charType);
+        }
+    }
+
+    /**
+     * Create a simple fallback robot when advanced creation fails
+     */
+    createSimpleRobotFallback(x, y, charType) {
+        try {
+            if (!this.add) {
+                console.error('EducationalMenuScene: Cannot create fallback robot - scene not ready');
+                return null;
+            }
+            
+            const container = this.add.container(x, y);
+            const color = charType?.baseColor || 0x4A90E2;
+            
+            // Simple robot shape
+            const body = this.add.graphics();
+            body.fillStyle(color, 0.8);
+            body.fillRoundedRect(-15, -20, 30, 40, 5);
+            
+            const head = this.add.graphics();
+            head.fillStyle(color, 0.9);
+            head.fillCircle(0, -30, 12);
+            
+            container.add([body, head]);
+            
+            // Simple animation
+            this.tweens.add({
+                targets: container,
+                y: y - 5,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            return container;
+            
+        } catch (error) {
+            console.error('EducationalMenuScene: Error creating fallback robot:', error);
+            return null;
+        }
     }
 
     /**
