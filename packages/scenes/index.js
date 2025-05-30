@@ -1,0 +1,17 @@
+// Barrel exports for all scenes
+export { Week1MathScene } from './Week1MathScene.js';
+export { Week1MathSceneSimple } from './Week1MathSceneSimple.js';
+export { Week2ReadingScene } from './Week2ReadingScene.js';
+export { Week3ScienceScene } from './Week3ScienceScene.js';
+export { Week4HistoryScene } from './Week4HistoryScene.js';
+export { Week5CrossoverScene } from './Week5CrossoverScene.js';
+export { Week6FinalScene } from './Week6FinalScene.js';
+export { EducationalMenuScene } from './EducationalMenuScene.js';
+export { CharacterSelectScene } from './CharacterSelectScene.js';
+export { ShopScene } from './ShopScene.js';
+export { IntroScene } from './IntroScene.js';
+export { MainScene } from './MainScene.js';
+export { GameOverScene } from './GameOverScene.js';
+export { SplashScene } from './SplashScene.js';
+export { MenuScene } from './MenuScene.js';
+export { HudScene } from './HudScene.js'; 
