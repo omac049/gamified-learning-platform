@@ -6,11 +6,13 @@ import { GameConfig, GameConfigUtils } from '../../shared/index.js';
  * Implements wave-based progression with math integration
  */
 export class CombatSystem extends GameSystem {
-    constructor(scene, config = {}) {
+    constructor(scene, config = {}, progressTracker) {
         super(scene, {
             updateThrottle: GameConfig.performance.aiUpdateInterval,
             ...config
         });
+
+        this.progressTracker = progressTracker;
 
         // Combat state
         this.currentWave = 0;
@@ -48,6 +50,27 @@ export class CombatSystem extends GameSystem {
         
         // Difficulty scaling
         this.currentDifficulty = 1.0;
+
+        // 🤖 REUSABLE COMBAT SYSTEM
+        // This system can be integrated into any week scene to provide consistent robot combat mechanics
+
+        this.playerRobot = null;
+        this.enemyRobot = null;
+        this.enemyHealth = 100;
+        this.maxEnemyHealth = 100;
+        this.combatActive = false;
+        
+        // Character stats
+        this.characterStats = null;
+        
+        // UI elements
+        this.enemyHealthBar = null;
+        this.enemyHealthBarBg = null;
+        this.combatStatsDisplay = null;
+        
+        // Animation groups
+        this.damageNumbers = [];
+        this.combatEffects = [];
     }
 
     async onInit() {
@@ -1169,5 +1192,555 @@ export class CombatSystem extends GameSystem {
                 onComplete: () => particle.destroy()
             });
         }
+    }
+
+    // Initialize the combat system
+    init() {
+        this.loadCharacterStats();
+        this.createCombatUI();
+        this.createRobots();
+        
+        console.log('CombatSystem: Combat system ready with stats:', this.characterStats);
+    }
+
+    // Load character stats from progress tracker
+    loadCharacterStats() {
+        this.characterStats = this.progressTracker.getCharacterStats();
+        console.log('CombatSystem: Loaded character stats:', this.characterStats);
+    }
+
+    // Create player and enemy robots
+    createRobots() {
+        this.createPlayerRobot();
+        this.createEnemyRobot();
+    }
+
+    // Create player robot based on character type
+    createPlayerRobot() {
+        const charType = this.progressTracker.getCharacterType();
+        
+        // Position based on scene layout (can be customized per scene)
+        const x = this.scene.scale.width * 0.2;
+        const y = this.scene.scale.height * 0.6;
+        
+        this.playerRobot = this.scene.add.container(x, y);
+        
+        // Create robot graphic
+        const robotGraphic = this.createRobotGraphic(0, 0, charType || { 
+            id: 'default', 
+            baseColor: 0x00ffff, 
+            accentColor: 0xff00ff 
+        });
+        
+        this.playerRobot.add(robotGraphic);
+        
+        // Add idle animation
+        this.scene.tweens.add({
+            targets: this.playerRobot,
+            y: y - 5,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        console.log('CombatSystem: Player robot created');
+    }
+
+    // Create enemy robot
+    createEnemyRobot() {
+        const x = this.scene.scale.width * 0.8;
+        const y = this.scene.scale.height * 0.6;
+        
+        this.enemyRobot = this.scene.add.container(x, y);
+        
+        // Create enemy robot graphic
+        const enemyGraphic = this.createEnemyRobotGraphic(0, 0);
+        this.enemyRobot.add(enemyGraphic);
+        
+        // Add menacing idle animation
+        this.scene.tweens.add({
+            targets: this.enemyRobot,
+            y: y - 5,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Initialize enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        console.log('CombatSystem: Enemy robot created');
+    }
+
+    // Create robot graphic based on character type
+    createRobotGraphic(x, y, charType) {
+        const robotContainer = this.scene.add.container(x, y);
+        
+        // Robot specifications
+        const specs = this.getRobotSpecifications(charType);
+        
+        // Create robot components
+        this.createRobotBase(robotContainer, specs);
+        this.createRobotTorso(robotContainer, specs);
+        this.createRobotHead(robotContainer, specs);
+        this.createRobotWeapons(robotContainer, specs);
+        
+        return robotContainer;
+    }
+
+    // Get robot specifications based on character type
+    getRobotSpecifications(charType) {
+        const baseSpecs = {
+            scale: 0.8,
+            primaryColor: charType.baseColor || 0x00ffff,
+            accentColor: charType.accentColor || 0xff00ff,
+            glowColor: charType.accentColor || 0xff00ff,
+            size: { width: 50, height: 70 }
+        };
+
+        switch (charType.id) {
+            case 'aria':
+                return {
+                    ...baseSpecs,
+                    type: 'stealth',
+                    primaryColor: 0x3b82f6,
+                    accentColor: 0x00ffff,
+                    features: { sleek: true, angular: true }
+                };
+                
+            case 'titan':
+                return {
+                    ...baseSpecs,
+                    type: 'heavy',
+                    primaryColor: 0xef4444,
+                    accentColor: 0xffa500,
+                    features: { bulky: true, armored: true }
+                };
+                
+            case 'nexus':
+                return {
+                    ...baseSpecs,
+                    type: 'tech',
+                    primaryColor: 0x10b981,
+                    accentColor: 0xfbbf24,
+                    features: { modular: true, crystalline: true }
+                };
+                
+            default:
+                return baseSpecs;
+        }
+    }
+
+    // Create robot components
+    createRobotBase(container, specs) {
+        const base = this.scene.add.graphics();
+        base.fillStyle(specs.primaryColor, 0.8);
+        base.fillRoundedRect(-15, 20, 30, 15, 5);
+        container.add(base);
+    }
+
+    createRobotTorso(container, specs) {
+        const torso = this.scene.add.graphics();
+        torso.fillStyle(specs.primaryColor, 0.9);
+        torso.fillRoundedRect(-12, -5, 24, 25, 6);
+        
+        // Add accent details
+        torso.fillStyle(specs.accentColor, 0.8);
+        torso.fillRoundedRect(-10, -3, 20, 5, 3);
+        torso.fillCircle(0, 5, 4);
+        
+        container.add(torso);
+    }
+
+    createRobotHead(container, specs) {
+        const head = this.scene.add.graphics();
+        head.fillStyle(specs.primaryColor, 0.95);
+        head.fillRoundedRect(-8, -25, 16, 15, 4);
+        
+        // Add visor
+        head.fillStyle(specs.glowColor, 0.9);
+        head.fillRoundedRect(-6, -22, 12, 4, 2);
+        
+        container.add(head);
+    }
+
+    createRobotWeapons(container, specs) {
+        // Simple weapon representation
+        const weapon = this.scene.add.graphics();
+        weapon.fillStyle(specs.accentColor, 0.9);
+        weapon.fillRoundedRect(15, -5, 8, 15, 2);
+        container.add(weapon);
+    }
+
+    // Create enemy robot graphic
+    createEnemyRobotGraphic(x, y) {
+        const robotContainer = this.scene.add.container(x, y);
+        
+        // Enemy robot - menacing red design
+        const specs = {
+            primaryColor: 0xff0000,
+            accentColor: 0xff6600,
+            glowColor: 0xff0000
+        };
+        
+        // Enemy base
+        const base = this.scene.add.graphics();
+        base.fillStyle(specs.primaryColor, 0.8);
+        base.fillRoundedRect(-18, 20, 36, 18, 6);
+        robotContainer.add(base);
+        
+        // Enemy torso
+        const torso = this.scene.add.graphics();
+        torso.fillStyle(specs.primaryColor, 0.9);
+        torso.fillRoundedRect(-15, -8, 30, 28, 8);
+        torso.fillStyle(specs.accentColor, 0.8);
+        torso.fillRoundedRect(-12, -5, 24, 6, 3);
+        torso.fillCircle(0, 8, 5);
+        robotContainer.add(torso);
+        
+        // Enemy head
+        const head = this.scene.add.graphics();
+        head.fillStyle(specs.primaryColor, 0.95);
+        head.fillRoundedRect(-10, -30, 20, 18, 5);
+        head.fillStyle(specs.glowColor, 1.0);
+        head.fillRoundedRect(-8, -27, 16, 5, 2);
+        robotContainer.add(head);
+        
+        // Enemy weapons
+        const leftWeapon = this.scene.add.graphics();
+        leftWeapon.fillStyle(specs.accentColor, 0.9);
+        leftWeapon.fillRoundedRect(-25, -5, 10, 18, 3);
+        robotContainer.add(leftWeapon);
+        
+        const rightWeapon = this.scene.add.graphics();
+        rightWeapon.fillStyle(specs.accentColor, 0.9);
+        rightWeapon.fillRoundedRect(15, -5, 10, 18, 3);
+        robotContainer.add(rightWeapon);
+        
+        return robotContainer;
+    }
+
+    // Create combat UI
+    createCombatUI() {
+        const uiX = this.scene.scale.width - 250;
+        const uiY = 50;
+        
+        // Enemy health bar background
+        this.enemyHealthBarBg = this.scene.add.graphics();
+        this.enemyHealthBarBg.fillStyle(0x333333, 0.8);
+        this.enemyHealthBarBg.fillRoundedRect(uiX, uiY, 200, 20, 10);
+        this.enemyHealthBarBg.lineStyle(2, 0xff0000, 0.8);
+        this.enemyHealthBarBg.strokeRoundedRect(uiX, uiY, 200, 20, 10);
+        
+        // Enemy health bar
+        this.enemyHealthBar = this.scene.add.graphics();
+        
+        // Enemy health text
+        this.enemyHealthText = this.scene.add.text(uiX + 100, uiY + 10, 'ENEMY: 100/100', {
+            fontSize: '12px',
+            fontFamily: 'Courier, monospace',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Combat stats display
+        this.combatStatsDisplay = this.scene.add.text(50, 150, '', {
+            fontSize: '14px',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ffff',
+            fontStyle: 'bold'
+        });
+        
+        this.updateCombatStatsDisplay();
+        this.updateEnemyHealthBar();
+        
+        console.log('CombatSystem: Combat UI created');
+    }
+
+    // Update enemy health bar
+    updateEnemyHealthBar() {
+        if (this.enemyHealthBar) {
+            this.enemyHealthBar.clear();
+            const healthPercent = this.enemyHealth / this.maxEnemyHealth;
+            const barWidth = 200 * healthPercent;
+            const uiX = this.scene.scale.width - 250;
+            const uiY = 50;
+            
+            // Health bar color based on health level
+            let healthColor = 0x00ff00; // Green
+            if (healthPercent < 0.6) healthColor = 0xffff00; // Yellow
+            if (healthPercent < 0.3) healthColor = 0xff0000; // Red
+            
+            this.enemyHealthBar.fillStyle(healthColor, 0.8);
+            this.enemyHealthBar.fillRoundedRect(uiX, uiY, barWidth, 20, 10);
+        }
+        
+        if (this.enemyHealthText) {
+            this.enemyHealthText.setText(`ENEMY: ${Math.max(0, Math.floor(this.enemyHealth))}/${this.maxEnemyHealth}`);
+        }
+    }
+
+    // Update combat stats display
+    updateCombatStatsDisplay() {
+        if (this.combatStatsDisplay) {
+            const stats = this.characterStats;
+            const displayText = [
+                `⚔️ ATK: ${(stats.attackPower * 100).toFixed(0)}%`,
+                `🛡️ DEF: ${stats.defense}`,
+                `⚡ SPD: ${stats.speed}s`,
+                `🎯 ACC: ${stats.accuracy}%`
+            ].join('  ');
+            
+            this.combatStatsDisplay.setText(displayText);
+        }
+    }
+
+    // Handle correct answer - player robot attacks
+    onCorrectAnswer(data = {}) {
+        console.log('CombatSystem: Correct answer - player robot attacks!');
+        
+        // Calculate damage based on character stats
+        const baseDamage = 25;
+        const damage = Math.floor(baseDamage * this.characterStats.attackPower);
+        
+        // Apply damage to enemy
+        this.enemyHealth = Math.max(0, this.enemyHealth - damage);
+        this.updateEnemyHealthBar();
+        
+        // Perform attack animation
+        this.performPlayerAttack(damage);
+        
+        // Create floating damage number
+        this.createFloatingDamageNumber(this.enemyRobot.x, this.enemyRobot.y - 50, damage, '#ff6600');
+        
+        // Check if enemy is defeated
+        if (this.enemyHealth <= 0) {
+            this.onEnemyDefeated();
+        }
+        
+        return damage;
+    }
+
+    // Handle incorrect answer - enemy robot attacks
+    onIncorrectAnswer(data = {}) {
+        console.log('CombatSystem: Incorrect answer - enemy robot attacks!');
+        
+        // Calculate penalty with defense reduction
+        const basePenalty = 50;
+        const actualPenalty = Math.max(10, basePenalty - this.characterStats.defense);
+        
+        // Perform enemy attack animation
+        this.performEnemyAttack(actualPenalty);
+        
+        // Create floating penalty number
+        this.createFloatingDamageNumber(this.playerRobot.x, this.playerRobot.y - 50, actualPenalty, '#ff0000');
+        
+        return actualPenalty;
+    }
+
+    // Player robot attack animation
+    performPlayerAttack(damage) {
+        this.scene.tweens.add({
+            targets: this.playerRobot,
+            x: this.playerRobot.x + 100,
+            duration: 200,
+            ease: 'Power2.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                // Create attack effect
+                this.createAttackEffect(this.enemyRobot.x - 30, this.enemyRobot.y, '#00ffff');
+                
+                // Enemy hit reaction
+                this.scene.tweens.add({
+                    targets: this.enemyRobot,
+                    x: this.enemyRobot.x + 20,
+                    duration: 100,
+                    yoyo: true,
+                    ease: 'Power2.easeOut'
+                });
+                
+                // Screen shake for impact
+                this.scene.cameras.main.shake(200, 0.01);
+            }
+        });
+    }
+
+    // Enemy robot attack animation
+    performEnemyAttack(penalty) {
+        this.scene.tweens.add({
+            targets: this.enemyRobot,
+            x: this.enemyRobot.x - 100,
+            duration: 200,
+            ease: 'Power2.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                // Create attack effect
+                this.createAttackEffect(this.playerRobot.x + 30, this.playerRobot.y, '#ff0000');
+                
+                // Player hit reaction
+                this.scene.tweens.add({
+                    targets: this.playerRobot,
+                    x: this.playerRobot.x - 20,
+                    duration: 100,
+                    yoyo: true,
+                    ease: 'Power2.easeOut'
+                });
+                
+                // Screen shake for impact
+                this.scene.cameras.main.shake(150, 0.008);
+            }
+        });
+    }
+
+    // Create attack effect
+    createAttackEffect(x, y, color) {
+        const effect = this.scene.add.graphics();
+        effect.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.8);
+        effect.fillCircle(x, y, 20);
+        
+        // Expand and fade effect
+        this.scene.tweens.add({
+            targets: effect,
+            scaleX: 3,
+            scaleY: 3,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2.easeOut',
+            onComplete: () => effect.destroy()
+        });
+        
+        // Add particles
+        for (let i = 0; i < 8; i++) {
+            const particle = this.scene.add.circle(x, y, 3, Phaser.Display.Color.HexStringToColor(color).color);
+            const angle = (i / 8) * Math.PI * 2;
+            const distance = 50;
+            
+            this.scene.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * distance,
+                y: y + Math.sin(angle) * distance,
+                alpha: 0,
+                duration: 400,
+                ease: 'Power2.easeOut',
+                onComplete: () => particle.destroy()
+            });
+        }
+    }
+
+    // Create floating damage number
+    createFloatingDamageNumber(x, y, damage, color) {
+        const damageText = this.scene.add.text(x, y, `-${damage}`, {
+            fontSize: '20px',
+            fontFamily: 'Courier, monospace',
+            fill: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        this.scene.tweens.add({
+            targets: damageText,
+            y: y - 50,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2.easeOut',
+            onComplete: () => damageText.destroy()
+        });
+    }
+
+    // Handle enemy defeat
+    onEnemyDefeated() {
+        console.log('CombatSystem: Enemy robot defeated!');
+        
+        // Victory animation
+        this.scene.tweens.add({
+            targets: this.enemyRobot,
+            alpha: 0.3,
+            scaleX: 0.8,
+            scaleY: 0.8,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Victory text
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 80, 'DEFEATED!', '#ff6600', '24px');
+        
+        // Award bonus XP and coins using character stats
+        const bonusXP = this.progressTracker.addExperience(50);
+        const bonusCoins = this.progressTracker.addCoins(25);
+        
+        // Show rewards
+        this.createFloatingText(this.scene.scale.width / 2, 200, `+${bonusXP} XP  +${bonusCoins} Coins`, '#ffd700', '18px');
+        
+        // Spawn new enemy after delay
+        this.scene.time.delayedCall(2000, () => {
+            this.spawnNewEnemy();
+        });
+    }
+
+    // Spawn new enemy
+    spawnNewEnemy() {
+        console.log('CombatSystem: Spawning new enemy robot...');
+        
+        // Reset enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        // Reset enemy appearance
+        this.enemyRobot.setAlpha(1);
+        this.enemyRobot.setScale(1);
+        
+        // Entrance animation
+        const originalX = this.scene.scale.width * 0.8;
+        this.enemyRobot.setX(this.scene.scale.width + 100);
+        this.scene.tweens.add({
+            targets: this.enemyRobot,
+            x: originalX,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Announcement
+        this.createFloatingText(this.scene.scale.width / 2, 150, 'NEW CHALLENGER!', '#ff0000', '20px');
+    }
+
+    // Create floating text
+    createFloatingText(x, y, text, color = '#ffffff', fontSize = '16px') {
+        const floatingText = this.scene.add.text(x, y, text, {
+            fontSize: fontSize,
+            fontFamily: 'Courier, monospace',
+            fill: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        // Animate the floating text
+        this.scene.tweens.add({
+            targets: floatingText,
+            y: y - 50,
+            alpha: 0,
+            duration: 1500,
+            ease: 'Power2.easeOut',
+            onComplete: () => {
+                floatingText.destroy();
+            }
+        });
+    }
+
+    // Cleanup method
+    destroy() {
+        // Clean up any remaining animations or objects
+        this.damageNumbers.forEach(number => {
+            if (number && number.destroy) number.destroy();
+        });
+        this.combatEffects.forEach(effect => {
+            if (effect && effect.destroy) effect.destroy();
+        });
+        
+        console.log('CombatSystem: Destroyed');
     }
 } 

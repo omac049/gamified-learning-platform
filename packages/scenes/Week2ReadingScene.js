@@ -1,11 +1,15 @@
 import { Scene } from "phaser";
 import { QuestionManager, ProgressTracker } from "../utils/managers/index.js";
+import { CombatSystem } from "../utils/systems/CombatSystem.js";
 
 export class Week2ReadingScene extends Scene {
     constructor() {
         super("Week2ReadingScene");
         this.questionManager = new QuestionManager();
         this.progressTracker = new ProgressTracker();
+        
+        // 🤖 COMBAT SYSTEM INTEGRATION
+        this.combatSystem = null;
         
         // Game state
         this.score = 0;
@@ -22,6 +26,17 @@ export class Week2ReadingScene extends Scene {
         this.storyProgress = 0;
         this.coinsEarned = 0;
         this.equippedEffects = null;
+        
+        // 🤖 COMBAT SYSTEM - Reading Combat State
+        this.readingCombatActive = false;
+        this.currentReadingChallenge = null;
+        this.streak = 0;
+        this.questionsAnswered = 0;
+        this.correctAnswers = 0;
+        this.maxStreak = 0;
+        
+        // Character stats for combat
+        this.characterStats = null;
     }
 
     init() {
@@ -29,10 +44,20 @@ export class Week2ReadingScene extends Scene {
         
         // Get equipped item effects
         this.equippedEffects = this.progressTracker.getEquippedEffects();
+        
+        // 🤖 COMBAT SYSTEM - Initialize character stats
+        this.characterStats = this.progressTracker.getCharacterStats();
+        console.log('Week2ReadingScene: Character stats loaded:', this.characterStats);
     }
 
     create() {
-        // Create the Mario-style world
+        console.log('Week2ReadingScene: Creating enhanced reading combat scene...');
+        
+        // 🤖 COMBAT SYSTEM - Initialize combat system
+        this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+        this.combatSystem.init();
+        
+        // Create the enhanced reading combat world
         this.createWorld();
         
         // Create player character
@@ -61,18 +86,135 @@ export class Week2ReadingScene extends Scene {
         
         // Start current story
         this.startStoryLevel();
+        
+        // 🤖 COMBAT SYSTEM - Set up combat event listeners
+        this.setupCombatEventListeners();
+        
+        console.log('Week2ReadingScene: Enhanced reading combat scene created!');
+    }
+
+    // 🤖 COMBAT SYSTEM - Set up combat event listeners
+    setupCombatEventListeners() {
+        // Connect reading answers to combat system
+        this.events.on('readingAnswerCorrect', (data) => {
+            this.onReadingAnswerCorrect(data);
+        });
+        
+        this.events.on('readingAnswerIncorrect', (data) => {
+            this.onReadingAnswerIncorrect(data);
+        });
+        
+        console.log('Week2ReadingScene: Combat event listeners set up');
+    }
+
+    // 🤖 COMBAT SYSTEM - Handle correct reading answer
+    onReadingAnswerCorrect(data) {
+        console.log('Week2ReadingScene: Correct reading answer with combat integration!', data);
+        
+        // Update reading stats
+        this.correctAnswers++;
+        this.questionsAnswered++;
+        this.streak++;
+        this.maxStreak = Math.max(this.maxStreak, this.streak);
+        
+        // Calculate score bonus with character stats
+        const baseScore = 100;
+        const scoreBonus = Math.floor(baseScore * this.characterStats.attackPower) + (this.streak * 20);
+        this.score += scoreBonus;
+        
+        // Combat system handles robot attack
+        const damage = this.combatSystem.onCorrectAnswer({
+            subject: 'reading',
+            difficulty: data.difficulty || 'medium',
+            timeSpent: data.timeSpent || 5
+        });
+        
+        // Award XP and coins with character bonuses
+        const xpGain = this.progressTracker.addExperience(15);
+        const coinGain = this.progressTracker.addCoins(10, 'Reading Mastery');
+        
+        // Create floating score text
+        this.combatSystem.createFloatingText(
+            this.combatSystem.playerRobot.x, 
+            this.combatSystem.playerRobot.y - 30, 
+            `+${scoreBonus}`, 
+            '#00ff00', 
+            '18px'
+        );
+        
+        // Record the answer
+        this.progressTracker.recordAnswer('reading', true, data.timeSpent || 5, data.difficulty || 'medium');
+        
+        console.log(`Reading Combat: ${damage} damage dealt, ${scoreBonus} score, ${xpGain} XP, ${coinGain} coins`);
+    }
+
+    // 🤖 COMBAT SYSTEM - Handle incorrect reading answer
+    onReadingAnswerIncorrect(data) {
+        console.log('Week2ReadingScene: Incorrect reading answer with combat integration!', data);
+        
+        // Update reading stats
+        this.questionsAnswered++;
+        this.streak = 0; // Reset streak unless player has streak keeper
+        
+        // Check for streak keeper equipment
+        const equippedItems = this.progressTracker.getEquippedItems();
+        if (equippedItems.core === 'streak_keeper') {
+            this.streak = Math.max(1, this.streak);
+            this.combatSystem.createFloatingText(
+                this.combatSystem.playerRobot.x, 
+                this.combatSystem.playerRobot.y - 30, 
+                'STREAK SAVED!', 
+                '#ffd700', 
+                '14px'
+            );
+        }
+        
+        // Combat system handles enemy attack
+        const penalty = this.combatSystem.onIncorrectAnswer({
+            subject: 'reading',
+            difficulty: data.difficulty || 'medium',
+            timeSpent: data.timeSpent || 5
+        });
+        
+        // Apply score penalty
+        this.score = Math.max(0, this.score - penalty);
+        
+        // Record the answer
+        this.progressTracker.recordAnswer('reading', false, data.timeSpent || 5, data.difficulty || 'medium');
+        
+        console.log(`Reading Combat: ${penalty} penalty applied (reduced by ${this.characterStats.defense} defense)`);
     }
 
     createWorld() {
-        // Sky background with gradient
-        this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x87CEEB)
+        // Enhanced background with combat theme
+        this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x1a0033)
             .setOrigin(0, 0);
         
-        // Add clouds
+        // Add stars for space combat feel
+        for (let i = 0; i < 50; i++) {
+            const star = this.add.circle(
+                Math.random() * this.scale.width,
+                Math.random() * this.scale.height,
+                Math.random() * 2 + 1,
+                0xffffff,
+                Math.random() * 0.5 + 0.3
+            );
+            
+            // Twinkling effect
+            this.tweens.add({
+                targets: star,
+                alpha: Math.random() * 0.5 + 0.3,
+                duration: Math.random() * 2000 + 1000,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+        
+        // Add some clouds for atmosphere
         for (let i = 0; i < 8; i++) {
             const x = Phaser.Math.Between(0, this.scale.width);
             const y = Phaser.Math.Between(50, 200);
-            const cloud = this.add.ellipse(x, y, 80, 40, 0xffffff, 0.8);
+            const cloud = this.add.ellipse(x, y, 80, 40, 0xffffff, 0.3);
             
             // Floating cloud animation
             this.tweens.add({
@@ -85,18 +227,26 @@ export class Week2ReadingScene extends Scene {
             });
         }
         
-        // Ground
-        this.add.rectangle(0, this.scale.height - 60, this.scale.width, 60, 0x228B22)
-            .setOrigin(0, 0);
+        // Ground with cyber grid
+        const ground = this.add.graphics();
+        ground.fillStyle(0x0066aa, 0.3);
+        ground.fillRect(0, this.scale.height - 60, this.scale.width, 60);
         
-        // Level title
-        this.add.text(50, 30, `📚 WORD KINGDOM - LEVEL ${this.currentLevel}`, {
+        // Grid lines
+        ground.lineStyle(1, 0x00ffff, 0.5);
+        for (let x = 0; x < this.scale.width; x += 50) {
+            ground.lineBetween(x, this.scale.height - 60, x, this.scale.height);
+        }
+        
+        // Enhanced title with combat theme
+        this.add.text(this.scale.width / 2, 30, `⚔️ READING COMBAT ARENA - LEVEL ${this.currentLevel} ⚔️`, {
             fontSize: '24px',
-            fontFamily: 'Arial, sans-serif',
-            fill: '#ffffff',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ffff',
+            fontStyle: 'bold',
             stroke: '#000000',
-            strokeThickness: 3
-        });
+            strokeThickness: 2
+        }).setOrigin(0.5);
     }
 
     createPlayer() {
@@ -487,112 +637,287 @@ export class Week2ReadingScene extends Scene {
     }
 
     showStoryQuestion() {
-        this.isGameActive = false;
+        if (!this.currentStory) return;
         
-        // Create question overlay
-        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.8)
-            .setOrigin(0, 0)
-            .setInteractive({ useHandCursor: false });
+        console.log('Week2ReadingScene: Showing reading combat challenge...');
         
-        // Question panel
-        const panel = this.add.rectangle(
-            this.scale.width / 2,
-            this.scale.height / 2,
-            700,
-            450,
-            0x1e3a8a
-        ).setStrokeStyle(4, 0xffffff);
+        // 🤖 COMBAT SYSTEM - Pause combat during question
+        this.readingCombatActive = true;
         
-        // Story text
-        let yPos = this.scale.height / 2 - 150;
+        // Create enhanced question overlay with combat theme
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.9);
+        overlay.setOrigin(0, 0);
+        overlay.setInteractive();
         
-        this.add.text(this.scale.width / 2, yPos, "📖 STORY TIME! 📖", {
-            fontSize: '24px',
-            fontFamily: 'Arial, sans-serif',
-            fill: '#fbbf24',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Create question panel with cyber styling
+        const panelWidth = Math.min(700, this.scale.width - 40);
+        const panelHeight = Math.min(500, this.scale.height - 40);
+        const panelX = this.scale.width / 2;
+        const panelY = this.scale.height / 2;
         
-        yPos += 40;
-        this.add.text(this.scale.width / 2, yPos, this.currentStory.passage, {
-            fontSize: '16px',
-            fontFamily: 'Arial, sans-serif',
-            fill: '#ffffff',
-            wordWrap: { width: 600 },
+        const panel = this.add.graphics();
+        panel.fillStyle(0x1a0033, 0.95);
+        panel.fillRoundedRect(panelX - panelWidth/2, panelY - panelHeight/2, panelWidth, panelHeight, 15);
+        panel.lineStyle(4, 0x00ffff, 0.8);
+        panel.strokeRoundedRect(panelX - panelWidth/2, panelY - panelHeight/2, panelWidth, panelHeight, 15);
+        
+        // Add glow effect
+        const glow = this.add.graphics();
+        glow.fillStyle(0x00ffff, 0.1);
+        glow.fillRoundedRect(panelX - panelWidth/2 - 5, panelY - panelHeight/2 - 5, panelWidth + 10, panelHeight + 10, 20);
+        
+        // 🤖 COMBAT SYSTEM - Show character stats during question
+        const statsText = this.add.text(panelX, panelY - panelHeight/2 + 30, 
+            `⚔️ ATK: ${(this.characterStats.attackPower * 100).toFixed(0)}%  ` +
+            `🛡️ DEF: ${this.characterStats.defense}  ` +
+            `🎯 ACC: ${this.characterStats.accuracy}%  ` +
+            `🔥 STREAK: ${this.streak}`, {
+            fontSize: '14px',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ffff',
+            fontStyle: 'bold',
             align: 'center'
         }).setOrigin(0.5);
         
-        yPos += 80;
-        this.add.text(this.scale.width / 2, yPos, this.currentStory.question, {
-            fontSize: '18px',
-            fontFamily: 'Arial, sans-serif',
-            fill: '#fbbf24',
-            fontStyle: 'bold'
+        // Enhanced title with combat theme
+        const title = this.add.text(panelX, panelY - panelHeight/2 + 70, '⚔️ READING COMBAT CHALLENGE ⚔️', {
+            fontSize: '24px',
+            fontFamily: 'Courier, monospace',
+            fill: '#ffff00',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
         }).setOrigin(0.5);
         
-        // Answer choices
-        yPos += 50;
+        // Pulsing effect for title
+        this.tweens.add({
+            targets: title,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Story passage with better formatting
+        const passageText = this.add.text(panelX, panelY - 80, this.currentStory.passage, {
+            fontSize: '16px',
+            fontFamily: 'Arial, sans-serif',
+            fill: '#ffffff',
+            align: 'center',
+            wordWrap: { width: panelWidth - 60 },
+            lineSpacing: 8
+        }).setOrigin(0.5);
+        
+        // Question with enhanced styling
+        const questionText = this.add.text(panelX, panelY + 20, this.currentStory.question, {
+            fontSize: '18px',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ff00',
+            fontStyle: 'bold',
+            align: 'center',
+            wordWrap: { width: panelWidth - 60 },
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5);
+        
+        // Enhanced answer choices with combat styling
         const choices = this.currentStory.choices;
-        const buttonWidth = 150;
-        const buttonHeight = 35;
-        const spacing = 160;
-        const startX = this.scale.width / 2 - (spacing * 1.5);
+        const choiceTexts = [];
+        const choiceBackgrounds = [];
         
         choices.forEach((choice, index) => {
-            const x = startX + (index * spacing);
+            const choiceY = panelY + 80 + (index * 45);
             
-            const button = this.add.rectangle(x, yPos, buttonWidth, buttonHeight, 0x10b981)
-                .setStrokeStyle(2, 0xffffff)
-                .setInteractive({ useHandCursor: true });
+            // Choice background with hover effect
+            const choiceBg = this.add.graphics();
+            choiceBg.fillStyle(0x333333, 0.8);
+            choiceBg.fillRoundedRect(panelX - 250, choiceY - 15, 500, 30, 8);
+            choiceBg.lineStyle(2, 0x666666, 0.8);
+            choiceBg.strokeRoundedRect(panelX - 250, choiceY - 15, 500, 30, 8);
+            choiceBackgrounds.push(choiceBg);
             
-            this.add.text(x, yPos, choice, {
-                fontSize: '14px',
-                fontFamily: 'Arial, sans-serif',
+            const choiceText = this.add.text(panelX, choiceY, `${String.fromCharCode(65 + index)}. ${choice}`, {
+                fontSize: '16px',
+                fontFamily: 'Courier, monospace',
                 fill: '#ffffff',
-                fontStyle: 'bold',
-                wordWrap: { width: buttonWidth - 10 },
-                align: 'center'
+                fontStyle: 'bold'
             }).setOrigin(0.5);
             
-            button.on('pointerover', () => button.setFillStyle(0x059669));
-            button.on('pointerout', () => button.setFillStyle(0x10b981));
-            button.on('pointerdown', () => {
-                this.checkStoryAnswer(choice, overlay, panel);
+            choiceTexts.push(choiceText);
+            
+            // Make choice interactive with enhanced feedback
+            choiceBg.setInteractive();
+            choiceText.setInteractive();
+            
+            const addHoverEffect = (target) => {
+                target.on('pointerover', () => {
+                    choiceBg.clear();
+                    choiceBg.fillStyle(0x00ffff, 0.3);
+                    choiceBg.fillRoundedRect(panelX - 250, choiceY - 15, 500, 30, 8);
+                    choiceBg.lineStyle(2, 0x00ffff, 1.0);
+                    choiceBg.strokeRoundedRect(panelX - 250, choiceY - 15, 500, 30, 8);
+                    choiceText.setColor('#00ffff');
+                    choiceText.setScale(1.05);
+                });
+                
+                target.on('pointerout', () => {
+                    choiceBg.clear();
+                    choiceBg.fillStyle(0x333333, 0.8);
+                    choiceBg.fillRoundedRect(panelX - 250, choiceY - 15, 500, 30, 8);
+                    choiceBg.lineStyle(2, 0x666666, 0.8);
+                    choiceBg.strokeRoundedRect(panelX - 250, choiceY - 15, 500, 30, 8);
+                    choiceText.setColor('#ffffff');
+                    choiceText.setScale(1.0);
+                });
+                
+                target.on('pointerdown', () => {
+                    this.checkStoryAnswer(index, overlay, panel, glow, title, passageText, questionText, choiceTexts, choiceBackgrounds, statsText);
+                });
+            };
+            
+            addHoverEffect(choiceBg);
+            addHoverEffect(choiceText);
+        });
+        
+        // Instructions with combat theme
+        const instructions = this.add.text(panelX, panelY + panelHeight/2 - 30, 
+            '🎯 Choose wisely! Your robot\'s combat effectiveness depends on your reading skills!', {
+            fontSize: '14px',
+            fontFamily: 'Courier, monospace',
+            fill: '#ffff00',
+            align: 'center',
+            fontStyle: 'italic'
+        }).setOrigin(0.5);
+        
+        // Blinking effect for instructions
+        this.tweens.add({
+            targets: instructions,
+            alpha: 0.5,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // 🤖 COMBAT SYSTEM - Show accuracy bonus info
+        if (this.characterStats.accuracy > 0) {
+            const accuracyBonus = this.add.text(panelX, panelY + panelHeight/2 - 10, 
+                `💡 Accuracy Bonus: +${this.characterStats.accuracy}% hint assistance available!`, {
+                fontSize: '12px',
+                fontFamily: 'Courier, monospace',
+                fill: '#00ff00',
+                align: 'center'
+            }).setOrigin(0.5);
+        }
+    }
+
+    checkStoryAnswer(selectedAnswer, overlay, panel, glow, title, passageText, questionText, choiceTexts, choiceBackgrounds, statsText) {
+        console.log('Week2ReadingScene: Checking reading combat answer...');
+        
+        const isCorrect = selectedAnswer === this.currentStory.correctAnswer;
+        const startTime = Date.now();
+        
+        // 🤖 COMBAT SYSTEM - Trigger appropriate combat response
+        if (isCorrect) {
+            // Correct answer - trigger combat system
+            this.events.emit('readingAnswerCorrect', {
+                difficulty: 'medium',
+                timeSpent: Date.now() - startTime,
+                subject: 'reading'
             });
+            
+            // Visual success feedback
+            this.showAnswerFeedback(true, selectedAnswer, choiceTexts, choiceBackgrounds);
+            
+        } else {
+            // Incorrect answer - trigger combat system
+            this.events.emit('readingAnswerIncorrect', {
+                difficulty: 'medium',
+                timeSpent: Date.now() - startTime,
+                subject: 'reading'
+            });
+            
+            // Visual failure feedback
+            this.showAnswerFeedback(false, selectedAnswer, choiceTexts, choiceBackgrounds);
+        }
+        
+        // Clean up UI after delay
+        this.time.delayedCall(2000, () => {
+            overlay.destroy();
+            panel.destroy();
+            glow.destroy();
+            title.destroy();
+            passageText.destroy();
+            questionText.destroy();
+            statsText.destroy();
+            choiceTexts.forEach(text => text.destroy());
+            choiceBackgrounds.forEach(bg => bg.destroy());
+            
+            // 🤖 COMBAT SYSTEM - Resume combat
+            this.readingCombatActive = false;
+            
+            // Continue with level progression
+            if (isCorrect) {
+                this.completeLevel();
+            } else {
+                this.loseLife();
+            }
         });
     }
 
-    checkStoryAnswer(selectedAnswer, overlay, panel) {
-        const isCorrect = this.questionManager.checkAnswer(selectedAnswer, this.currentStory.answer);
-        
+    // 🤖 COMBAT SYSTEM - Enhanced answer feedback
+    showAnswerFeedback(isCorrect, selectedAnswer, choiceTexts, choiceBackgrounds) {
         if (isCorrect) {
-            // Award coins for correct reading comprehension
-            const coinsEarned = this.progressTracker.calculateCoinReward('medium', 0);
-            this.progressTracker.recordAnswer('reading', true, 0, 'medium');
-            this.coinsEarned += coinsEarned;
+            // Highlight correct answer in green
+            choiceBackgrounds[selectedAnswer].clear();
+            choiceBackgrounds[selectedAnswer].fillStyle(0x00ff00, 0.8);
+            choiceBackgrounds[selectedAnswer].fillRoundedRect(
+                choiceTexts[selectedAnswer].x - 250, 
+                choiceTexts[selectedAnswer].y - 15, 
+                500, 30, 8
+            );
+            choiceTexts[selectedAnswer].setColor('#ffffff');
+            choiceTexts[selectedAnswer].setFontStyle('bold');
             
-            this.score += 100;
+            // Success effect
+            this.combatSystem.createFloatingText(
+                this.scale.width / 2, 
+                this.scale.height / 2 - 100, 
+                '✅ CORRECT! ROBOT ATTACK!', 
+                '#00ff00', 
+                '24px'
+            );
             
-            // Update UI
-            this.coinBalanceText.setText(`🪙 ${this.progressTracker.getCoinBalance()}`);
-            this.sessionCoinsText.setText(`Session: +${this.coinsEarned} 🪙`);
-            this.scoreText.setText(`Score: ${this.score}`);
-            
-            this.showFeedback(`✅ Excellent reading! +100 points, +${coinsEarned} coins`, 0x10b981);
-            this.showCoinCollection(coinsEarned, this.scale.width / 2, this.scale.height / 2 + 100);
-            
-            // Complete level
-            this.completeLevel();
         } else {
-            this.progressTracker.recordAnswer('reading', false);
-            this.showFeedback(`❌ Try again! Correct answer: ${this.currentStory.answer}`, 0xef4444);
-            this.loseLife();
+            // Highlight wrong answer in red
+            choiceBackgrounds[selectedAnswer].clear();
+            choiceBackgrounds[selectedAnswer].fillStyle(0xff0000, 0.8);
+            choiceBackgrounds[selectedAnswer].fillRoundedRect(
+                choiceTexts[selectedAnswer].x - 250, 
+                choiceTexts[selectedAnswer].y - 15, 
+                500, 30, 8
+            );
+            choiceTexts[selectedAnswer].setColor('#ffffff');
+            
+            // Show correct answer in green
+            const correctIndex = this.currentStory.correctAnswer;
+            choiceBackgrounds[correctIndex].clear();
+            choiceBackgrounds[correctIndex].fillStyle(0x00ff00, 0.5);
+            choiceBackgrounds[correctIndex].fillRoundedRect(
+                choiceTexts[correctIndex].x - 250, 
+                choiceTexts[correctIndex].y - 15, 
+                500, 30, 8
+            );
+            
+            // Failure effect
+            this.combatSystem.createFloatingText(
+                this.scale.width / 2, 
+                this.scale.height / 2 - 100, 
+                '❌ WRONG! ENEMY ATTACK!', 
+                '#ff0000', 
+                '24px'
+            );
         }
-        
-        // Close overlay
-        overlay.destroy();
-        panel.destroy();
-        this.isGameActive = true;
     }
 
     completeLevel() {

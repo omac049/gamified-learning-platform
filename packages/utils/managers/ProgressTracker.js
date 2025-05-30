@@ -877,4 +877,182 @@ export class ProgressTracker {
     destroy() {
         this.saveManager.disableAutoSave();
     }
+
+    // 🤖 COMBAT SYSTEM - Character Stats Integration
+    getCharacterStats() {
+        const charType = this.getCharacterType();
+        const level = this.getCharacterLevel();
+        
+        if (!charType) {
+            // Default stats for no character
+            return {
+                attackPower: 1.0,
+                defense: 0,
+                speed: 30,
+                accuracy: 0,
+                luck: 0,
+                energy: 100,
+                intelligence: 0
+            };
+        }
+        
+        // Base stats from character type with level scaling
+        const baseStats = {
+            attackPower: 1.0 + (level - 1) * 0.05, // +5% per level
+            defense: (level - 1) * 2, // +2 defense per level
+            speed: 30 + (level - 1) * 1, // +1 second per level
+            accuracy: (level - 1) * 3, // +3% accuracy per level
+            luck: (level - 1) * 2, // +2% luck per level
+            energy: 100 + (level - 1) * 5, // +5 energy per level
+            intelligence: (level - 1) * 3 // +3% intelligence per level
+        };
+        
+        // Apply character type bonuses
+        switch (charType.id) {
+            case 'aria':
+                baseStats.attackPower += 0.1;
+                baseStats.accuracy += 15;
+                baseStats.speed += 5;
+                break;
+            case 'titan':
+                baseStats.attackPower += 0.2;
+                baseStats.defense += 10;
+                baseStats.energy += 20;
+                break;
+            case 'nexus':
+                baseStats.intelligence += 20;
+                baseStats.accuracy += 10;
+                baseStats.luck += 10;
+                break;
+        }
+        
+        // Apply equipment bonuses
+        this.applyEquipmentStatsBonus(baseStats);
+        
+        return baseStats;
+    }
+
+    // 🤖 COMBAT SYSTEM - Apply equipment bonuses to character stats
+    applyEquipmentStatsBonus(stats) {
+        const equippedItems = this.progress.equippedItems || {};
+        
+        // Apply weapon bonuses
+        if (equippedItems.weapon) {
+            switch (equippedItems.weapon) {
+                case 'plasma_sword':
+                    stats.attackPower += 0.25;
+                    break;
+                case 'neural_disruptor':
+                    stats.attackPower += 0.5;
+                    break;
+                case 'quantum_cannon':
+                    stats.attackPower += 1.0;
+                    break;
+            }
+        }
+        
+        // Apply shield bonuses
+        if (equippedItems.shield) {
+            switch (equippedItems.shield) {
+                case 'energy_barrier':
+                    stats.defense += 25;
+                    break;
+                case 'adaptive_armor':
+                    stats.defense += 35;
+                    break;
+                case 'quantum_shield':
+                    stats.defense += 50;
+                    break;
+            }
+        }
+        
+        // Apply tech bonuses
+        if (equippedItems.tech) {
+            switch (equippedItems.tech) {
+                case 'hint_scanner':
+                    stats.accuracy += 25;
+                    break;
+                case 'time_dilator':
+                    stats.speed += 15;
+                    break;
+                case 'answer_analyzer':
+                    stats.accuracy += 35;
+                    break;
+            }
+        }
+        
+        // Apply core bonuses
+        if (equippedItems.core) {
+            switch (equippedItems.core) {
+                case 'xp_amplifier':
+                    stats.intelligence += 50;
+                    break;
+                case 'coin_magnet':
+                    stats.luck += 100;
+                    break;
+                case 'streak_keeper':
+                    stats.energy += 50;
+                    break;
+            }
+        }
+        
+        return stats;
+    }
+
+    // 🤖 COMBAT SYSTEM - Add experience with intelligence bonus
+    addExperience(baseAmount) {
+        const stats = this.getCharacterStats();
+        const multiplier = 1 + (stats.intelligence / 100);
+        const finalAmount = Math.floor(baseAmount * multiplier);
+        
+        this.awardCharacterExperience(finalAmount);
+        console.log(`ProgressTracker: Added ${finalAmount} XP (${baseAmount} base × ${multiplier.toFixed(2)} intelligence bonus)`);
+        return finalAmount;
+    }
+
+    // 🤖 COMBAT SYSTEM - Add coins with luck bonus
+    addCoins(baseAmount, reason = "Combat Victory") {
+        const stats = this.getCharacterStats();
+        const multiplier = 1 + (stats.luck / 100);
+        const finalAmount = Math.floor(baseAmount * multiplier);
+        
+        this.awardCoins(finalAmount, reason);
+        console.log(`ProgressTracker: Added ${finalAmount} coins (${baseAmount} base × ${multiplier.toFixed(2)} luck bonus)`);
+        return finalAmount;
+    }
+
+    // 🤖 COMBAT SYSTEM - Get equipment items for display
+    getEquippedItems() {
+        return this.progress.equippedItems || {
+            weapon: null,
+            shield: null,
+            tech: null,
+            core: null,
+            cosmetic: null,
+            powerUp: null,
+            tool: null,
+            decoration: null
+        };
+    }
+
+    // 🤖 COMBAT SYSTEM - Check if player has specific equipment
+    hasEquipment(equipmentId) {
+        const equipped = this.getEquippedItems();
+        return Object.values(equipped).includes(equipmentId);
+    }
+
+    // 🤖 COMBAT SYSTEM - Get combat performance multipliers
+    getCombatMultipliers() {
+        const stats = this.getCharacterStats();
+        
+        return {
+            damageMultiplier: stats.attackPower,
+            defenseReduction: stats.defense,
+            timeBonus: stats.speed,
+            accuracyBonus: stats.accuracy,
+            coinBonus: 1 + (stats.luck / 100),
+            xpBonus: 1 + (stats.intelligence / 100),
+            energyCapacity: stats.energy
+        };
+    }
 } 
