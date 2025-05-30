@@ -194,7 +194,7 @@ export class EducationalMenuScene extends Scene {
             points.push(x + size * Math.cos(angle));
             points.push(y + size * Math.sin(angle));
         }
-        graphics.strokePoints(points, true);
+        graphics.fillPoints ? graphics.fillPoints(points, true) : graphics.strokePoints(points, true);
     }
 
     createAmbientParticles() {
@@ -643,7 +643,7 @@ export class EducationalMenuScene extends Scene {
         // Stats
         const stats = [
             `Score: ${progress.totalScore}`,
-            `Weeks: ${progress.weeksCompleted.length}/6`,
+            `Week: ${progress.weeksCompleted.length}/6`,
             `Accuracy: ${progress.overallAccuracy}%`
         ];
         
@@ -782,65 +782,45 @@ export class EducationalMenuScene extends Scene {
         }).setOrigin(0.5);
         cardContainer.add(difficultyText);
         
-        // Play button (if unlocked)
+        // Make the entire card clickable if unlocked
         if (isUnlocked) {
-            // Use Rectangle instead of Graphics for better interactive stability
-            const playButton = this.add.rectangle(width - 50, height - 22, 60, 25, week.color, 0.8);
-            playButton.setStrokeStyle(2, week.color, 1);
+            console.log(`Setting up interactive for Week ${week.number}: ${week.title}`);
             
-            // Use standard setInteractive instead of safeSetInteractive for Rectangle objects
-            playButton.setInteractive({ useHandCursor: true });
-            cardContainer.add(playButton);
+            // Create invisible clickable area that covers the entire card
+            const clickArea = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0);
+            clickArea.setInteractive({ useHandCursor: true });
+            cardContainer.add(clickArea);
             
-            console.log(`Successfully set interactive for Week ${week.number} play button (Rectangle)`);
-            
-            const playText = this.add.text(width - 50, height - 22, 'PLAY', {
-                fontSize: '12px',
-                fontFamily: 'Courier, monospace',
-                fill: '#ffffff',
-                fontStyle: 'bold'
-            }).setOrigin(0.5);
-            cardContainer.add(playText);
-            
-            // Simplified hover effects that don't require redrawing
-            playButton.on('pointerover', () => {
-                console.log(`Hovering over Week ${week.number} play button`);
+            // Add visual feedback on hover
+            clickArea.on('pointerover', () => {
+                console.log(`Hovering over Week ${week.number}`);
                 
-                // Scale effect for card
+                // Highlight the card
+                cardBg.clear();
+                cardBg.fillStyle(week.color, 0.4);
+                cardBg.fillRoundedRect(0, 0, width, height, 12);
+                cardBg.lineStyle(3, week.color, 1);
+                cardBg.strokeRoundedRect(0, 0, width, height, 12);
+                
+                // Scale effect
                 this.tweens.add({
                     targets: cardContainer,
-                    scaleX: 1.02,
-                    scaleY: 1.02,
-                    duration: 200,
-                    ease: 'Power2.easeOut'
-                });
-                
-                // Change button appearance without redrawing
-                playButton.setFillStyle(week.color, 1);
-                playButton.setStrokeStyle(3, week.color, 1);
-                
-                // Scale button slightly
-                this.tweens.add({
-                    targets: playButton,
                     scaleX: 1.05,
                     scaleY: 1.05,
-                    duration: 150,
+                    duration: 200,
                     ease: 'Power2.easeOut'
                 });
-                
-                // Add glow effect using a separate graphics object
-                if (!playButton.glowEffect) {
-                    const glow = this.add.graphics();
-                    glow.fillStyle(week.color, 0.3);
-                    glow.fillRoundedRect(width - 85, height - 40, 70, 35, 15);
-                    cardContainer.add(glow);
-                    glow.setDepth(-1);
-                    playButton.glowEffect = glow;
-                }
             });
             
-            playButton.on('pointerout', () => {
-                // Reset card scale
+            clickArea.on('pointerout', () => {
+                // Reset card appearance
+                cardBg.clear();
+                cardBg.fillStyle(bgColor, bgAlpha);
+                cardBg.fillRoundedRect(0, 0, width, height, 12);
+                cardBg.lineStyle(2, week.color, 0.6);
+                cardBg.strokeRoundedRect(0, 0, width, height, 12);
+                
+                // Reset scale
                 this.tweens.add({
                     targets: cardContainer,
                     scaleX: 1,
@@ -848,33 +828,20 @@ export class EducationalMenuScene extends Scene {
                     duration: 200,
                     ease: 'Power2.easeOut'
                 });
-                
-                // Reset button appearance
-                playButton.setFillStyle(week.color, 0.8);
-                playButton.setStrokeStyle(2, week.color, 1);
-                
-                // Reset button scale
-                this.tweens.add({
-                    targets: playButton,
-                    scaleX: 1,
-                    scaleY: 1,
-                    duration: 150,
-                    ease: 'Power2.easeOut'
-                });
-                
-                // Remove glow effect
-                if (playButton.glowEffect) {
-                    playButton.glowEffect.destroy();
-                    playButton.glowEffect = null;
-                }
             });
             
-            playButton.on('pointerdown', () => {
-                console.log(`Starting Week ${week.number}: ${week.title}`);
+            clickArea.on('pointerdown', () => {
+                console.log(`🎮 STARTING Week ${week.number}: ${week.title}`);
+                
+                // Prevent multiple clicks
+                if (this.isTransitioning) {
+                    console.log('Already transitioning, ignoring click');
+                    return;
+                }
                 
                 // Visual feedback for click
                 this.tweens.add({
-                    targets: playButton,
+                    targets: cardContainer,
                     scaleX: 0.95,
                     scaleY: 0.95,
                     duration: 100,
@@ -887,40 +854,18 @@ export class EducationalMenuScene extends Scene {
                 });
             });
             
-            // Make the entire card clickable for better UX
-            if (this.safeSetInteractive(cardBg, null, { useHandCursor: true })) {
-                console.log(`Successfully set interactive for Week ${week.number} card background`);
-                
-                cardBg.on('pointerover', () => {
-                    cardBg.clear();
-                    cardBg.fillStyle(week.color, 0.3);
-                    cardBg.fillRoundedRect(0, 0, width, height, 12);
-                    cardBg.lineStyle(2, week.color, 0.8);
-                    cardBg.strokeRoundedRect(0, 0, width, height, 12);
-                    
-                    // Change cursor to pointer
-                    this.input.setDefaultCursor('pointer');
-                });
-                
-                cardBg.on('pointerout', () => {
-                    cardBg.clear();
-                    cardBg.fillStyle(week.color, 0.2);
-                    cardBg.fillRoundedRect(0, 0, width, height, 12);
-                    cardBg.lineStyle(2, week.color, 0.6);
-                    cardBg.strokeRoundedRect(0, 0, width, height, 12);
-                    
-                    // Reset cursor
-                    this.input.setDefaultCursor('default');
-                });
-                
-                // Card click handler (alternative to play button)
-                cardBg.on('pointerdown', () => {
-                    console.log(`Card clicked for Week ${week.number}: ${week.title}`);
-                    this.startWeek(week.number);
-                });
-            } else {
-                console.warn('EducationalMenuScene: Failed to set interactive on card background for week', week.number);
-            }
+            // Add a "PLAY" button for extra clarity
+            const playButton = this.add.rectangle(width - 50, height - 22, 60, 25, week.color, 0.9);
+            playButton.setStrokeStyle(2, week.color, 1);
+            cardContainer.add(playButton);
+            
+            const playText = this.add.text(width - 50, height - 22, 'PLAY', {
+                fontSize: '12px',
+                fontFamily: 'Courier, monospace',
+                fill: '#ffffff',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            cardContainer.add(playText);
         }
         
         // Entrance animation
@@ -1503,48 +1448,6 @@ export class EducationalMenuScene extends Scene {
             yPos += 50;
         }
 
-        // Progress stats in a grid layout
-        const stats = [
-            { label: 'Total Score', value: progress.totalScore, icon: '🎯' },
-            { label: 'Weeks Completed', value: `${progress.weeksCompleted.length}/6`, icon: '📚' },
-            { label: 'Badges Earned', value: progress.badges, icon: '🏆' },
-            { label: 'Coins Earned', value: progress.totalCoinsEarned, icon: '💰' },
-            { label: 'Current Streak', value: `${progress.currentStreak} days`, icon: '🔥' },
-            { label: 'Overall Accuracy', value: `${progress.overallAccuracy}%`, icon: '🎯' }
-        ];
-
-        // Create stats grid
-        const statsPerRow = 2;
-        const statWidth = 300;
-        const statHeight = 40;
-        const statSpacing = 20;
-
-        stats.forEach((stat, index) => {
-            const row = Math.floor(index / statsPerRow);
-            const col = index % statsPerRow;
-            const statX = this.scale.width / 2 - (statWidth + statSpacing) / 2 + col * (statWidth + statSpacing);
-            const statY = yPos + row * (statHeight + statSpacing);
-
-            // Stat background
-            const statBg = this.add.graphics();
-            statBg.fillStyle(this.uiColors.bgGlass, 0.3);
-            statBg.fillRoundedRect(statX - statWidth/2, statY, statWidth, statHeight, 8);
-            statBg.lineStyle(1, this.uiColors.neonBlue, 0.5);
-            statBg.strokeRoundedRect(statX - statWidth/2, statY, statWidth, statHeight, 8);
-            statBg.setDepth(102);
-
-            // Stat text
-            const statText = this.add.text(statX, statY + 20, 
-                `${stat.icon} ${stat.label}: ${stat.value}`, {
-                fontSize: '14px',
-                fontFamily: 'Courier, monospace',
-                fill: '#ffffff',
-                fontStyle: 'bold'
-            }).setOrigin(0.5).setDepth(103);
-        });
-
-        yPos += Math.ceil(stats.length / statsPerRow) * (statHeight + statSpacing) + 30;
-
         // Subject accuracies
         const subjectTitle = this.add.text(this.scale.width / 2, yPos, "SUBJECT PERFORMANCE", {
             fontSize: '18px',
@@ -1663,338 +1566,6 @@ export class EducationalMenuScene extends Scene {
         });
     }
 
-    // Method to update character card when upgrades are purchased
-    updateCharacterCard() {
-        if (!this.characterCardElements) return;
-        
-        const progress = this.progressTracker.getProgressSummary();
-        const charType = this.progressTracker.getCharacterType();
-        
-        // Add null checks to prevent errors
-        if (!progress || !charType) {
-            console.warn('EducationalMenuScene: Missing progress or character type data');
-            return;
-        }
-        
-        // Update level text
-        if (this.characterCardElements.levelText) {
-            this.characterCardElements.levelText.setText(`Level ${progress.characterLevel || 1}`);
-        }
-        
-        // Update experience bar
-        const expProgress = progress.expNeededForNextLevel > 0 ? 
-            Math.min((progress.characterExperience || 0) / progress.expNeededForNextLevel, 1) : 0;
-        
-        if (this.characterCardElements.expBar) {
-            this.characterCardElements.expBar.clear();
-            this.characterCardElements.expBar.fillStyle(charType.accentColor);
-            this.characterCardElements.expBar.fillRoundedRect(
-                this.characterCardElements.expBar.x, 
-                this.characterCardElements.expBar.y, 
-                200 * expProgress, 10, 5
-            );
-        }
-        
-        // Update experience text
-        if (this.characterCardElements.expText) {
-            this.characterCardElements.expText.setText(
-                `${progress.characterExperience || 0}/${progress.expNeededForNextLevel || 100} XP`
-            );
-        }
-        
-        // Update coin display in header
-        if (this.playerCoinsText) {
-            this.playerCoinsText.setText(`💰 ${this.progressTracker.getCoinBalance()} Coins`);
-        }
-        
-        // Refresh upgrade indicators
-        this.refreshUpgradeIndicators();
-        
-        // Visual feedback for update
-        if (this.characterCardElements.robotSprite) {
-            this.tweens.add({
-                targets: this.characterCardElements.robotSprite,
-                scaleX: 1.1,
-                scaleY: 1.1,
-                duration: 200,
-                yoyo: true,
-                ease: 'Power2.easeOut'
-            });
-        }
-    }
-    
-    refreshUpgradeIndicators() {
-        // Remove existing upgrade indicators
-        if (this.upgradeIndicators) {
-            this.upgradeIndicators.forEach(indicator => {
-                if (indicator.bg) indicator.bg.destroy();
-                if (indicator.icon) indicator.icon.destroy();
-            });
-        }
-        this.upgradeIndicators = [];
-        
-        // Re-add upgrade indicators with current equipment
-        if (this.characterCardElements && this.characterCardElements.robotSprite) {
-            const charType = this.progressTracker.getCharacterType();
-            const robotSprite = this.characterCardElements.robotSprite;
-            this.addUpgradeIndicators(robotSprite.x, robotSprite.y, charType);
-        }
-    }
-    
-    // Method called when returning from shop
-    onReturnFromShop() {
-        console.log('Returned from shop, updating character card...');
-        this.updateCharacterCard();
-        
-        // Show purchase confirmation if items were bought
-        const recentPurchases = this.registry.get('recentPurchases');
-        if (recentPurchases && recentPurchases.length > 0) {
-            this.showPurchaseConfirmation(recentPurchases);
-            this.registry.set('recentPurchases', []); // Clear after showing
-        }
-    }
-    
-    showPurchaseConfirmation(purchases) {
-        // Create purchase confirmation modal
-        const modalBg = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.7)
-            .setOrigin(0, 0)
-            .setDepth(1200);
-        
-        // Use safe interactive setup for modal background
-        if (this.safeSetInteractive(modalBg, null)) {
-            const modalPanel = this.add.graphics();
-            modalPanel.fillStyle(this.uiColors.bgCard, 0.95);
-            modalPanel.fillRoundedRect(this.scale.width / 2 - 250, this.scale.height / 2 - 150, 500, 300, 16);
-            modalPanel.lineStyle(2, this.uiColors.success, 0.8);
-            modalPanel.strokeRoundedRect(this.scale.width / 2 - 250, this.scale.height / 2 - 150, 500, 300, 16);
-            modalPanel.setDepth(1201);
-            
-            const successTitle = this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 
-                '🎉 UPGRADES INSTALLED! 🎉', {
-                fontSize: '24px',
-                fontFamily: 'Courier, monospace',
-                fill: '#10b981',
-                fontStyle: 'bold',
-                stroke: '#000000',
-                strokeThickness: 2
-            }).setOrigin(0.5).setDepth(1202);
-            
-            let purchaseText = 'Your robot has been enhanced with:\n\n';
-            purchases.forEach(purchase => {
-                purchaseText += `• ${purchase.name} (+${purchase.bonus} ${purchase.type})\n`;
-            });
-            purchaseText += '\nYour robot is now more powerful!';
-            
-            const purchaseInfo = this.add.text(this.scale.width / 2, this.scale.height / 2 - 20, 
-                purchaseText, {
-                fontSize: '14px',
-                fontFamily: 'Courier, monospace',
-                fill: '#ffffff',
-                align: 'center',
-                lineSpacing: 6
-            }).setOrigin(0.5).setDepth(1202);
-            
-            const closeBtn = this.add.graphics();
-            closeBtn.fillStyle(this.uiColors.success, 0.8);
-            closeBtn.fillRoundedRect(this.scale.width / 2 - 60, this.scale.height / 2 + 100, 120, 40, 12);
-            closeBtn.lineStyle(2, this.uiColors.success);
-            closeBtn.strokeRoundedRect(this.scale.width / 2 - 60, this.scale.height / 2 + 100, 120, 40, 12);
-            closeBtn.setDepth(1202);
-            
-            // Use safe interactive setup for close button
-            if (this.safeSetInteractive(closeBtn, null, { useHandCursor: true })) {
-                const closeBtnText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 120, 'AWESOME!', {
-                    fontSize: '14px',
-                    fontFamily: 'Courier, monospace',
-                    fill: '#ffffff',
-                    fontStyle: 'bold'
-                }).setOrigin(0.5).setDepth(1203);
-                
-                // Close button interactions
-                closeBtn.on('pointerdown', () => {
-                    modalBg.destroy();
-                    modalPanel.destroy();
-                    successTitle.destroy();
-                    purchaseInfo.destroy();
-                    closeBtn.destroy();
-                    closeBtnText.destroy();
-                });
-                
-                modalBg.on('pointerdown', () => {
-                    closeBtn.emit('pointerdown');
-                });
-                
-                // Auto-dismiss after 5 seconds
-                this.time.delayedCall(5000, () => {
-                    if (modalBg && modalBg.active) {
-                        closeBtn.emit('pointerdown');
-                    }
-                });
-            }
-            
-            // Sparkle effects
-            for (let i = 0; i < 15; i++) {
-                const sparkle = this.add.text(
-                    this.scale.width / 2 + Phaser.Math.Between(-200, 200),
-                    this.scale.height / 2 + Phaser.Math.Between(-120, 120),
-                    '✨', {
-                    fontSize: '16px'
-                }).setDepth(1204);
-                
-                this.tweens.add({
-                    targets: sparkle,
-                    alpha: 0,
-                    scale: 2,
-                    rotation: Math.PI * 2,
-                    duration: 2000,
-                    ease: 'Power2.easeOut',
-                    onComplete: () => sparkle.destroy()
-                });
-            }
-            
-            // Entrance animation
-            modalPanel.setAlpha(0);
-            modalPanel.setScale(0.8);
-            this.tweens.add({
-                targets: modalPanel,
-                alpha: 1,
-                scaleX: 1,
-                scaleY: 1,
-                duration: 400,
-                ease: 'Back.easeOut'
-            });
-        }
-    }
-
-    // Update method for responsive layout changes
-    updateLayout() {
-        this.calculateLayout();
-        // Could rebuild UI elements here if needed for true responsiveness
-    }
-    
-    // Update method to prevent hitAreaCallback errors
-    update() {
-        // Preventive cleanup of corrupted Graphics objects
-        if (this.children && this.children.list) {
-            this.children.list.forEach(child => {
-                if (child.type === 'Graphics' && child.input && 
-                    child.input.hitAreaCallback && 
-                    typeof child.input.hitAreaCallback !== 'function') {
-                    try {
-                        // Immediately disable corrupted Graphics input
-                        child.input = null;
-                    } catch (error) {
-                        // Silent cleanup in update loop
-                    }
-                }
-            });
-        }
-    }
-
-    // Cleanup method
-    destroy() {
-        // Clean up containers
-        if (this.contentContainer) this.contentContainer.destroy();
-        if (this.headerContainer) this.headerContainer.destroy();
-        if (this.sidebarContainer) this.sidebarContainer.destroy();
-        if (this.floatingContainer) this.floatingContainer.destroy();
-        
-        super.destroy();
-    }
-
-    createRobotGraphic(x, y, charType) {
-        // Create a container for the robot graphic
-        const robotContainer = this.add.container(x, y);
-        
-        // Robot body (main chassis)
-        const body = this.add.graphics();
-        body.fillStyle(charType.baseColor, 0.8);
-        body.fillRoundedRect(-20, -15, 40, 30, 8);
-        body.lineStyle(2, charType.accentColor, 1);
-        body.strokeRoundedRect(-20, -15, 40, 30, 8);
-        robotContainer.add(body);
-        
-        // Robot head
-        const head = this.add.graphics();
-        head.fillStyle(charType.baseColor, 0.9);
-        head.fillRoundedRect(-15, -35, 30, 20, 6);
-        head.lineStyle(2, charType.accentColor, 1);
-        head.strokeRoundedRect(-15, -35, 30, 20, 6);
-        robotContainer.add(head);
-        
-        // Robot eyes (glowing)
-        const leftEye = this.add.circle(-8, -25, 3, charType.accentColor, 1);
-        const rightEye = this.add.circle(8, -25, 3, charType.accentColor, 1);
-        robotContainer.add(leftEye);
-        robotContainer.add(rightEye);
-        
-        // Robot arms
-        const leftArm = this.add.graphics();
-        leftArm.fillStyle(charType.baseColor, 0.7);
-        leftArm.fillRoundedRect(-30, -10, 12, 20, 4);
-        leftArm.lineStyle(1, charType.accentColor, 0.8);
-        leftArm.strokeRoundedRect(-30, -10, 12, 20, 4);
-        robotContainer.add(leftArm);
-        
-        const rightArm = this.add.graphics();
-        rightArm.fillStyle(charType.baseColor, 0.7);
-        rightArm.fillRoundedRect(18, -10, 12, 20, 4);
-        rightArm.lineStyle(1, charType.accentColor, 0.8);
-        rightArm.strokeRoundedRect(18, -10, 12, 20, 4);
-        robotContainer.add(rightArm);
-        
-        // Robot legs
-        const leftLeg = this.add.graphics();
-        leftLeg.fillStyle(charType.baseColor, 0.7);
-        leftLeg.fillRoundedRect(-15, 15, 10, 15, 3);
-        leftLeg.lineStyle(1, charType.accentColor, 0.8);
-        leftLeg.strokeRoundedRect(-15, 15, 10, 15, 3);
-        robotContainer.add(leftLeg);
-        
-        const rightLeg = this.add.graphics();
-        rightLeg.fillStyle(charType.baseColor, 0.7);
-        rightLeg.fillRoundedRect(5, 15, 10, 15, 3);
-        rightLeg.lineStyle(1, charType.accentColor, 0.8);
-        rightLeg.strokeRoundedRect(5, 15, 10, 15, 3);
-        robotContainer.add(rightLeg);
-        
-        // Character type indicator (icon in center)
-        const typeIcon = this.add.text(0, -5, charType.icon, {
-            fontSize: '24px'
-        }).setOrigin(0.5);
-        robotContainer.add(typeIcon);
-        
-        // Add subtle glow effect
-        const glow = this.add.graphics();
-        glow.fillStyle(charType.accentColor, 0.1);
-        glow.fillCircle(0, 0, 35);
-        robotContainer.add(glow);
-        robotContainer.sendToBack(glow);
-        
-        // Add pulsing animation to eyes
-        this.tweens.add({
-            targets: [leftEye, rightEye],
-            alpha: 0.5,
-            duration: 1500,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        
-        // Add subtle glow animation
-        this.tweens.add({
-            targets: glow,
-            alpha: 0.2,
-            scale: 1.1,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        
-        return robotContainer;
-    }
-
     // Helper method to safely set interactive properties
     safeSetInteractive(gameObject, hitArea, options = {}) {
         try {
@@ -2103,5 +1674,988 @@ export class EducationalMenuScene extends Scene {
             }
             return false;
         }
+    }
+
+    /**
+     * Creates a super detailed, animated robot graphic for each character type
+     * This is the most advanced procedural robot generator ever created!
+     */
+    createRobotGraphic(x, y, charType) {
+        console.log(`Creating ultra-detailed robot graphic for ${charType.name} at (${x}, ${y})`);
+        
+        // Create main container for the robot
+        const robotContainer = this.add.container(x, y);
+        
+        // Robot specifications based on character type
+        const robotSpecs = this.getRobotSpecifications(charType);
+        
+        // Create robot components in layers
+        this.createRobotShadow(robotContainer, robotSpecs);
+        this.createRobotBase(robotContainer, robotSpecs);
+        this.createRobotTorso(robotContainer, robotSpecs);
+        this.createRobotArms(robotContainer, robotSpecs);
+        this.createRobotHead(robotContainer, robotSpecs);
+        this.createRobotDetails(robotContainer, robotSpecs);
+        this.createRobotWeapons(robotContainer, robotSpecs);
+        this.createRobotEffects(robotContainer, robotSpecs);
+        this.createRobotAnimations(robotContainer, robotSpecs);
+        
+        return robotContainer;
+    }
+
+    /**
+     * Get detailed specifications for each robot type
+     */
+    getRobotSpecifications(charType) {
+        const baseSpecs = {
+            scale: 1.0,
+            primaryColor: charType.baseColor,
+            accentColor: charType.accentColor,
+            glowColor: charType.accentColor,
+            size: { width: 60, height: 80 }
+        };
+
+        switch (charType.id) {
+            case 'aria':
+                return {
+                    ...baseSpecs,
+                    type: 'stealth',
+                    primaryColor: 0x3b82f6,
+                    accentColor: 0x00ffff,
+                    glowColor: 0x00ffff,
+                    features: {
+                        sleek: true,
+                        angular: true,
+                        transparent: true,
+                        dataStreams: true,
+                        holographicDisplay: true,
+                        neuralInterface: true
+                    },
+                    weapons: ['neural_disruptor', 'data_lance'],
+                    specialEffects: ['digital_particles', 'code_streams', 'hologram_flicker']
+                };
+                
+            case 'titan':
+                return {
+                    ...baseSpecs,
+                    type: 'heavy',
+                    primaryColor: 0xef4444,
+                    accentColor: 0xffa500,
+                    glowColor: 0xff6600,
+                    size: { width: 70, height: 90 },
+                    features: {
+                        bulky: true,
+                        armored: true,
+                        mechanical: true,
+                        steamVents: true,
+                        heavyPlating: true,
+                        powerCore: true
+                    },
+                    weapons: ['plasma_cannon', 'missile_pods'],
+                    specialEffects: ['steam_vents', 'power_surges', 'armor_glow']
+                };
+                
+            case 'nexus':
+                return {
+                    ...baseSpecs,
+                    type: 'tech',
+                    primaryColor: 0x10b981,
+                    accentColor: 0xfbbf24,
+                    glowColor: 0x00ff88,
+                    features: {
+                        modular: true,
+                        crystalline: true,
+                        energyBased: true,
+                        quantumCore: true,
+                        techInterface: true,
+                        adaptiveArmor: true
+                    },
+                    weapons: ['quantum_beam', 'tech_drones'],
+                    specialEffects: ['quantum_particles', 'energy_waves', 'crystal_resonance']
+                };
+                
+            default:
+                return baseSpecs;
+        }
+    }
+
+    /**
+     * Create dynamic shadow with depth
+     */
+    createRobotShadow(container, specs) {
+        const shadow = this.add.graphics();
+        shadow.fillStyle(0x000000, 0.3);
+        shadow.fillEllipse(0, 45, specs.size.width * 0.8, 15);
+        
+        // Add shadow blur effect
+        shadow.setBlendMode(Phaser.BlendModes.MULTIPLY);
+        container.add(shadow);
+        
+        // Animate shadow breathing
+        this.tweens.add({
+            targets: shadow,
+            scaleX: 1.1,
+            alpha: 0.2,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    /**
+     * Create the robot's base/legs with character-specific design
+     */
+    createRobotBase(container, specs) {
+        const base = this.add.graphics();
+        
+        if (specs.features?.bulky) {
+            // TITAN - Heavy tank treads
+            base.fillStyle(specs.primaryColor, 0.9);
+            base.fillRoundedRect(-25, 25, 50, 20, 5);
+            
+            // Tread details
+            base.fillStyle(specs.accentColor, 0.8);
+            for (let i = -20; i <= 20; i += 8) {
+                base.fillRect(i, 28, 4, 14);
+            }
+            
+            // Hydraulic supports
+            base.lineStyle(4, specs.accentColor, 0.9);
+            base.beginPath();
+            base.moveTo(-15, 25);
+            base.lineTo(-10, 10);
+            base.moveTo(15, 25);
+            base.lineTo(10, 10);
+            base.strokePath();
+            
+        } else if (specs.features?.sleek) {
+            // ARIA - Hovering base with energy field
+            base.fillStyle(specs.primaryColor, 0.7);
+            base.fillEllipse(0, 35, 40, 12);
+            
+            // Energy field rings
+            base.lineStyle(2, specs.glowColor, 0.6);
+            for (let i = 0; i < 3; i++) {
+                base.strokeEllipse(0, 35, 45 + i * 5, 15 + i * 2);
+            }
+            
+            // Hover particles
+            this.createHoverParticles(container, specs);
+            
+        } else if (specs.features?.modular) {
+            // NEXUS - Crystalline legs with tech interfaces
+            base.fillStyle(specs.primaryColor, 0.8);
+            
+            // Hexagonal leg segments
+            for (let side = -1; side <= 1; side += 2) {
+                const legX = side * 15;
+                this.drawHexagon(base, legX, 30, 8);
+                this.drawHexagon(base, legX, 40, 6);
+                
+                // Tech connectors
+                base.lineStyle(2, specs.accentColor, 0.9);
+                base.beginPath();
+                base.moveTo(legX, 22);
+                base.lineTo(legX, 48);
+                base.strokePath();
+            }
+            
+            // Central power distribution
+            base.fillStyle(specs.glowColor, 0.6);
+            base.fillCircle(0, 35, 5);
+        }
+        
+        container.add(base);
+        
+        // Add base glow effect
+        const baseGlow = this.add.graphics();
+        baseGlow.lineStyle(3, specs.glowColor, 0.4);
+        baseGlow.strokeEllipse(0, 35, specs.size.width * 0.7, 20);
+        baseGlow.setBlendMode(Phaser.BlendModes.ADD);
+        container.add(baseGlow);
+        
+        // Animate base glow
+        this.tweens.add({
+            targets: baseGlow,
+            alpha: 0.2,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    /**
+     * Create the robot's torso with advanced detailing
+     */
+    createRobotTorso(container, specs) {
+        const torso = this.add.graphics();
+        
+        if (specs.features?.bulky) {
+            // TITAN - Heavy armored torso
+            torso.fillStyle(specs.primaryColor, 0.95);
+            torso.fillRoundedRect(-20, -10, 40, 35, 8);
+            
+            // Armor plating
+            torso.fillStyle(specs.accentColor, 0.8);
+            torso.fillRoundedRect(-18, -8, 36, 8, 4);
+            torso.fillRoundedRect(-18, 5, 36, 8, 4);
+            torso.fillRoundedRect(-18, 18, 36, 5, 2);
+            
+            // Power core
+            torso.fillStyle(specs.glowColor, 0.9);
+            torso.fillCircle(0, 5, 6);
+            
+            // Ventilation grilles
+            torso.lineStyle(2, specs.accentColor, 0.7);
+            for (let i = -15; i <= 15; i += 5) {
+                torso.beginPath();
+                torso.moveTo(i, -5);
+                torso.lineTo(i, 20);
+                torso.strokePath();
+            }
+            
+        } else if (specs.features?.sleek) {
+            // ARIA - Sleek, angular torso with data streams
+            torso.fillStyle(specs.primaryColor, 0.8);
+            
+            // Angular torso shape
+            const torsoPath = [
+                -15, -10,
+                15, -10,
+                20, 0,
+                15, 25,
+                -15, 25,
+                -20, 0
+            ];
+            torso.fillPoints(torsoPath, true);
+            
+            // Data stream channels
+            torso.lineStyle(2, specs.glowColor, 0.8);
+            for (let i = 0; i < 4; i++) {
+                const y = -5 + i * 8;
+                torso.beginPath();
+                torso.moveTo(-12, y);
+                torso.lineTo(12, y);
+                torso.strokePath();
+            }
+            
+            // Neural interface
+            torso.fillStyle(specs.glowColor, 0.9);
+            torso.fillCircle(0, 0, 4);
+            
+        } else if (specs.features?.modular) {
+            // NEXUS - Crystalline modular torso
+            torso.fillStyle(specs.primaryColor, 0.85);
+            
+            // Main crystal structure
+            this.drawHexagon(torso, 0, 5, 18);
+            
+            // Smaller crystal modules
+            this.drawHexagon(torso, -10, -5, 8);
+            this.drawHexagon(torso, 10, -5, 8);
+            this.drawHexagon(torso, 0, 20, 10);
+            
+            // Energy conduits
+            torso.lineStyle(3, specs.accentColor, 0.9);
+            torso.beginPath();
+            torso.moveTo(-10, -5);
+            torso.lineTo(0, 5);
+            torso.lineTo(10, -5);
+            torso.moveTo(0, 5);
+            torso.lineTo(0, 20);
+            torso.strokePath();
+            
+            // Quantum core
+            torso.fillStyle(specs.glowColor, 1.0);
+            torso.fillCircle(0, 5, 3);
+        }
+        
+        container.add(torso);
+        
+        // Add torso details and effects
+        this.createTorsoDetails(container, specs);
+    }
+
+    /**
+     * Create detailed robot arms with weapons
+     */
+    createRobotArms(container, specs) {
+        [-1, 1].forEach(side => {
+            const arm = this.add.graphics();
+            const armX = side * 25;
+            
+            if (specs.features?.bulky) {
+                // TITAN - Heavy mechanical arms
+                arm.fillStyle(specs.primaryColor, 0.9);
+                arm.fillRoundedRect(armX - 4, -5, 8, 25, 4);
+                
+                // Shoulder joint
+                arm.fillStyle(specs.accentColor, 0.9);
+                arm.fillCircle(armX, -5, 6);
+                
+                // Hydraulic details
+                arm.lineStyle(2, specs.accentColor, 0.8);
+                arm.beginPath();
+                arm.moveTo(armX - 2, 0);
+                arm.lineTo(armX + 2, 0);
+                arm.moveTo(armX - 2, 10);
+                arm.lineTo(armX + 2, 10);
+                arm.strokePath();
+                
+            } else if (specs.features?.sleek) {
+                // ARIA - Sleek energy arms
+                arm.fillStyle(specs.primaryColor, 0.7);
+                
+                // Angular arm segments
+                const armPath = [
+                    armX - 3, -5,
+                    armX + 3, -5,
+                    armX + 4, 5,
+                    armX + 2, 20,
+                    armX - 2, 20,
+                    armX - 4, 5
+                ];
+                arm.fillPoints(armPath, true);
+                
+                // Energy conduits
+                arm.lineStyle(2, specs.glowColor, 0.8);
+                arm.beginPath();
+                arm.moveTo(armX, -5);
+                arm.lineTo(armX, 20);
+                arm.strokePath();
+                
+            } else if (specs.features?.modular) {
+                // NEXUS - Modular crystal arms
+                arm.fillStyle(specs.primaryColor, 0.8);
+                
+                // Segmented crystal arm
+                this.drawHexagon(arm, armX, -2, 5);
+                this.drawHexagon(arm, armX, 8, 6);
+                this.drawHexagon(arm, armX, 18, 4);
+                
+                // Tech connectors
+                arm.lineStyle(2, specs.accentColor, 0.9);
+                arm.beginPath();
+                arm.moveTo(armX, 3);
+                arm.lineTo(armX, 14);
+                arm.strokePath();
+            }
+            
+            container.add(arm);
+            
+            // Add arm animations
+            this.tweens.add({
+                targets: arm,
+                rotation: side * 0.1,
+                duration: 3000 + Math.random() * 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        });
+    }
+
+    /**
+     * Create detailed robot head with character personality
+     */
+    createRobotHead(container, specs) {
+        const head = this.add.graphics();
+        
+        if (specs.features?.bulky) {
+            // TITAN - Heavy armored head
+            head.fillStyle(specs.primaryColor, 0.95);
+            head.fillRoundedRect(-12, -35, 24, 20, 6);
+            
+            // Visor
+            head.fillStyle(specs.glowColor, 0.9);
+            head.fillRoundedRect(-10, -32, 20, 6, 3);
+            
+            // Antenna array
+            head.lineStyle(3, specs.accentColor, 0.9);
+            head.beginPath();
+            head.moveTo(-8, -35);
+            head.lineTo(-8, -42);
+            head.moveTo(8, -35);
+            head.lineTo(8, -42);
+            head.strokePath();
+            
+            // Status lights
+            head.fillStyle(specs.accentColor, 1.0);
+            head.fillCircle(-6, -28, 2);
+            head.fillCircle(6, -28, 2);
+            
+        } else if (specs.features?.sleek) {
+            // ARIA - Sleek angular head
+            head.fillStyle(specs.primaryColor, 0.8);
+            
+            // Angular head shape
+            const headPath = [
+                -10, -35,
+                10, -35,
+                12, -25,
+                8, -15,
+                -8, -15,
+                -12, -25
+            ];
+            head.fillPoints(headPath, true);
+            
+            // Holographic visor
+            head.fillStyle(specs.glowColor, 0.7);
+            head.fillPoints([
+                -8, -32,
+                8, -32,
+                10, -26,
+                6, -20,
+                -6, -20,
+                -10, -26
+            ], true);
+            
+            // Data streams
+            head.lineStyle(1, specs.glowColor, 0.8);
+            for (let i = 0; i < 3; i++) {
+                const y = -30 + i * 4;
+                head.beginPath();
+                head.moveTo(-6, y);
+                head.lineTo(6, y);
+                head.strokePath();
+            }
+            
+        } else if (specs.features?.modular) {
+            // NEXUS - Crystalline head
+            head.fillStyle(specs.primaryColor, 0.85);
+            
+            // Main crystal head
+            this.drawHexagon(head, 0, -25, 12);
+            
+            // Sensor array
+            this.drawHexagon(head, -8, -30, 4);
+            this.drawHexagon(head, 8, -30, 4);
+            this.drawHexagon(head, 0, -35, 3);
+            
+            // Quantum interface
+            head.fillStyle(specs.glowColor, 1.0);
+            head.fillCircle(0, -25, 3);
+        }
+        
+        container.add(head);
+        
+        // Add head effects
+        this.createHeadEffects(container, specs);
+    }
+
+    /**
+     * Create additional robot details and decorations
+     */
+    createRobotDetails(container, specs) {
+        const details = this.add.graphics();
+        
+        // Character-specific details
+        if (specs.features?.dataStreams) {
+            // ARIA - Flowing data streams
+            this.createDataStreams(container, specs);
+        }
+        
+        if (specs.features?.steamVents) {
+            // TITAN - Steam vents and heat effects
+            this.createSteamVents(container, specs);
+        }
+        
+        if (specs.features?.quantumCore) {
+            // NEXUS - Quantum energy effects
+            this.createQuantumEffects(container, specs);
+        }
+        
+        // Universal details
+        this.createStatusIndicators(container, specs);
+        this.createEnergyReadouts(container, specs);
+    }
+
+    /**
+     * Create character-specific weapons
+     */
+    createRobotWeapons(container, specs) {
+        specs.weapons?.forEach((weapon, index) => {
+            const weaponX = (index - 0.5) * 30;
+            const weaponY = 15;
+            
+            switch (weapon) {
+                case 'neural_disruptor':
+                    this.createNeuralDisruptor(container, weaponX, weaponY, specs);
+                    break;
+                case 'plasma_cannon':
+                    this.createPlasmaCannon(container, weaponX, weaponY, specs);
+                    break;
+                case 'quantum_beam':
+                    this.createQuantumBeam(container, weaponX, weaponY, specs);
+                    break;
+            }
+        });
+    }
+
+    /**
+     * Create special effects for each robot type
+     */
+    createRobotEffects(container, specs) {
+        specs.specialEffects?.forEach(effect => {
+            switch (effect) {
+                case 'digital_particles':
+                    this.createDigitalParticles(container, specs);
+                    break;
+                case 'steam_vents':
+                    this.createSteamVentEffects(container, specs);
+                    break;
+                case 'quantum_particles':
+                    this.createQuantumParticleEffects(container, specs);
+                    break;
+            }
+        });
+    }
+
+    /**
+     * Create complex animations for the robot
+     */
+    createRobotAnimations(container, specs) {
+        // Idle breathing animation
+        this.tweens.add({
+            targets: container,
+            scaleY: 1.02,
+            duration: 2500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Subtle rotation
+        this.tweens.add({
+            targets: container,
+            rotation: 0.05,
+            duration: 4000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Character-specific animations
+        if (specs.features?.sleek) {
+            // ARIA - Phase shifting effect
+            this.tweens.add({
+                targets: container,
+                alpha: 0.8,
+                duration: 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+        
+        if (specs.features?.bulky) {
+            // TITAN - Power surge effect
+            this.time.addEvent({
+                delay: 3000,
+                callback: () => this.createPowerSurge(container, specs),
+                loop: true
+            });
+        }
+        
+        if (specs.features?.modular) {
+            // NEXUS - Crystal resonance
+            this.createCrystalResonance(container, specs);
+        }
+    }
+
+    // Helper methods for specific effects
+    createHoverParticles(container, specs) {
+        for (let i = 0; i < 8; i++) {
+            const particle = this.add.graphics();
+            particle.fillStyle(specs.glowColor, 0.6);
+            particle.fillCircle(0, 0, 2);
+            
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = 25;
+            particle.setPosition(Math.cos(angle) * radius, 35 + Math.sin(angle) * 5);
+            
+            container.add(particle);
+            
+            this.tweens.add({
+                targets: particle,
+                rotation: Math.PI * 2,
+                duration: 4000,
+                repeat: -1,
+                ease: 'Linear'
+            });
+        }
+    }
+
+    createDataStreams(container, specs) {
+        for (let i = 0; i < 5; i++) {
+            const stream = this.add.graphics();
+            stream.lineStyle(1, specs.glowColor, 0.7);
+            
+            const startY = -30 + i * 15;
+            stream.beginPath();
+            stream.moveTo(-15, startY);
+            stream.lineTo(15, startY);
+            stream.strokePath();
+            
+            container.add(stream);
+            
+            this.tweens.add({
+                targets: stream,
+                alpha: 0.3,
+                duration: 800 + i * 200,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+    }
+
+    createQuantumEffects(container, specs) {
+        const quantumField = this.add.graphics();
+        quantumField.lineStyle(2, specs.glowColor, 0.5);
+        
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            const radius = 35;
+            quantumField.strokeCircle(
+                Math.cos(angle) * 10,
+                Math.sin(angle) * 10,
+                radius - i * 5
+            );
+        }
+        
+        container.add(quantumField);
+        
+        this.tweens.add({
+            targets: quantumField,
+            rotation: Math.PI * 2,
+            duration: 8000,
+            repeat: -1,
+            ease: 'Linear'
+        });
+    }
+
+    createPowerSurge(container, specs) {
+        const surge = this.add.graphics();
+        surge.lineStyle(4, specs.glowColor, 1.0);
+        surge.strokeRect(-25, -35, 50, 70);
+        surge.setBlendMode(Phaser.BlendModes.ADD);
+        
+        container.add(surge);
+        
+        this.tweens.add({
+            targets: surge,
+            alpha: 0,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            duration: 500,
+            ease: 'Power2.easeOut',
+            onComplete: () => surge.destroy()
+        });
+    }
+
+    createCrystalResonance(container, specs) {
+        this.time.addEvent({
+            delay: 2000,
+            callback: () => {
+                const resonance = this.add.graphics();
+                resonance.lineStyle(2, specs.glowColor, 0.8);
+                
+                for (let i = 0; i < 6; i++) {
+                    this.drawHexagon(resonance, 0, 0, 20 + i * 8);
+                }
+                
+                resonance.setBlendMode(Phaser.BlendModes.ADD);
+                container.add(resonance);
+                
+                this.tweens.add({
+                    targets: resonance,
+                    alpha: 0,
+                    scaleX: 2,
+                    scaleY: 2,
+                    duration: 1500,
+                    ease: 'Power2.easeOut',
+                    onComplete: () => resonance.destroy()
+                });
+            },
+            loop: true
+        });
+    }
+
+    // Additional helper methods for weapons and effects
+    createNeuralDisruptor(container, x, y, specs) {
+        const weapon = this.add.graphics();
+        weapon.fillStyle(specs.accentColor, 0.9);
+        weapon.fillRoundedRect(x - 3, y, 6, 15, 2);
+        
+        weapon.lineStyle(2, specs.glowColor, 0.8);
+        weapon.beginPath();
+        weapon.moveTo(x, y);
+        weapon.lineTo(x, y + 15);
+        weapon.strokePath();
+        
+        container.add(weapon);
+    }
+
+    createPlasmaCannon(container, x, y, specs) {
+        const weapon = this.add.graphics();
+        weapon.fillStyle(specs.primaryColor, 0.9);
+        weapon.fillRoundedRect(x - 5, y, 10, 20, 3);
+        
+        weapon.fillStyle(specs.glowColor, 1.0);
+        weapon.fillCircle(x, y + 18, 3);
+        
+        container.add(weapon);
+    }
+
+    createQuantumBeam(container, x, y, specs) {
+        const weapon = this.add.graphics();
+        weapon.fillStyle(specs.accentColor, 0.8);
+        
+        this.drawHexagon(weapon, x, y + 10, 8);
+        
+        weapon.lineStyle(2, specs.glowColor, 1.0);
+        weapon.beginPath();
+        weapon.moveTo(x, y);
+        weapon.lineTo(x, y + 20);
+        weapon.strokePath();
+        
+        container.add(weapon);
+    }
+
+    createStatusIndicators(container, specs) {
+        const indicators = this.add.graphics();
+        
+        // Health indicator
+        indicators.fillStyle(0x00ff00, 0.8);
+        indicators.fillCircle(-20, -40, 2);
+        
+        // Energy indicator
+        indicators.fillStyle(0x0088ff, 0.8);
+        indicators.fillCircle(-15, -40, 2);
+        
+        // System status
+        indicators.fillStyle(specs.glowColor, 0.8);
+        indicators.fillCircle(-10, -40, 2);
+        
+        container.add(indicators);
+        
+        // Blinking animation
+        this.tweens.add({
+            targets: indicators,
+            alpha: 0.4,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    createEnergyReadouts(container, specs) {
+        // Energy level bars
+        for (let i = 0; i < 3; i++) {
+            const bar = this.add.graphics();
+            bar.fillStyle(specs.glowColor, 0.6);
+            bar.fillRect(15, -35 + i * 4, 8, 2);
+            
+            container.add(bar);
+            
+            this.tweens.add({
+                targets: bar,
+                alpha: 0.3,
+                duration: 500 + i * 200,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+    }
+
+    createTorsoDetails(container, specs) {
+        const details = this.add.graphics();
+        
+        // Add character-specific torso details
+        if (specs.features?.holographicDisplay) {
+            details.fillStyle(specs.glowColor, 0.5);
+            details.fillRoundedRect(-8, -5, 16, 10, 2);
+            
+            // Holographic scan lines
+            details.lineStyle(1, specs.glowColor, 0.7);
+            for (let i = 0; i < 5; i++) {
+                details.beginPath();
+                details.moveTo(-6, -3 + i * 2);
+                details.lineTo(6, -3 + i * 2);
+                details.strokePath();
+            }
+        }
+        
+        container.add(details);
+    }
+
+    createHeadEffects(container, specs) {
+        // Scanning beam effect
+        const scanBeam = this.add.graphics();
+        scanBeam.lineStyle(2, specs.glowColor, 0.8);
+        scanBeam.beginPath();
+        scanBeam.moveTo(-10, -28);
+        scanBeam.lineTo(10, -28);
+        scanBeam.strokePath();
+        
+        container.add(scanBeam);
+        
+        // Animate scanning
+        this.tweens.add({
+            targets: scanBeam,
+            alpha: 0.3,
+            duration: 1200,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    createDigitalParticles(container, specs) {
+        for (let i = 0; i < 12; i++) {
+            const particle = this.add.graphics();
+            particle.fillStyle(specs.glowColor, 0.7);
+            particle.fillRect(0, 0, 2, 2);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 30 + Math.random() * 20;
+            particle.setPosition(
+                Math.cos(angle) * radius,
+                Math.sin(angle) * radius
+            );
+            
+            container.add(particle);
+            
+            this.tweens.add({
+                targets: particle,
+                x: particle.x + (Math.random() - 0.5) * 40,
+                y: particle.y + (Math.random() - 0.5) * 40,
+                alpha: 0.2,
+                duration: 2000 + Math.random() * 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+    }
+
+    createSteamVentEffects(container, specs) {
+        // Steam particles
+        for (let i = 0; i < 6; i++) {
+            const steam = this.add.graphics();
+            steam.fillStyle(0xffffff, 0.4);
+            steam.fillCircle(0, 0, 3);
+            
+            steam.setPosition(-15 + i * 6, 20);
+            container.add(steam);
+            
+            this.tweens.add({
+                targets: steam,
+                y: steam.y - 30,
+                alpha: 0,
+                scaleX: 2,
+                scaleY: 2,
+                duration: 2000,
+                repeat: -1,
+                delay: i * 300,
+                ease: 'Power2.easeOut'
+            });
+        }
+    }
+
+    createQuantumParticleEffects(container, specs) {
+        for (let i = 0; i < 8; i++) {
+            const particle = this.add.graphics();
+            particle.fillStyle(specs.glowColor, 0.8);
+            particle.fillCircle(0, 0, 1);
+            
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = 40;
+            particle.setPosition(
+                Math.cos(angle) * radius,
+                Math.sin(angle) * radius
+            );
+            
+            container.add(particle);
+            
+            this.tweens.add({
+                targets: particle,
+                rotation: Math.PI * 2,
+                duration: 3000,
+                repeat: -1,
+                ease: 'Linear'
+            });
+            
+            this.tweens.add({
+                targets: particle,
+                alpha: 0.3,
+                scale: 2,
+                duration: 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+    }
+
+    /**
+     * Create steam vents for TITAN robot
+     */
+    createSteamVents(container, specs) {
+        // Steam vent positions on the robot
+        const ventPositions = [
+            { x: -15, y: 10 },
+            { x: 15, y: 10 },
+            { x: -10, y: -5 },
+            { x: 10, y: -5 }
+        ];
+
+        ventPositions.forEach((pos, index) => {
+            const vent = this.add.graphics();
+            vent.fillStyle(specs.accentColor, 0.8);
+            vent.fillCircle(pos.x, pos.y, 3);
+            
+            // Vent opening
+            vent.fillStyle(0x000000, 0.6);
+            vent.fillCircle(pos.x, pos.y, 2);
+            
+            container.add(vent);
+            
+            // Create steam particles periodically
+            this.time.addEvent({
+                delay: 1000 + index * 250,
+                callback: () => this.createSteamParticle(container, pos.x, pos.y, specs),
+                loop: true
+            });
+        });
+    }
+
+    /**
+     * Create individual steam particle
+     */
+    createSteamParticle(container, x, y, specs) {
+        const steam = this.add.graphics();
+        steam.fillStyle(0xffffff, 0.6);
+        steam.fillCircle(x, y, 2);
+        
+        container.add(steam);
+        
+        this.tweens.add({
+            targets: steam,
+            y: y - 25,
+            alpha: 0,
+            scaleX: 2,
+            scaleY: 2,
+            duration: 1500,
+            ease: 'Power2.easeOut',
+            onComplete: () => steam.destroy()
+        });
     }
 }

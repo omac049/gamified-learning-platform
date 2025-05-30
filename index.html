@@ -85,10 +85,30 @@
             opacity: 0.7;
             text-align: center;
         }
+        
+        #debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 2000;
+            border: 1px solid #00ff00;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Debug info panel -->
+    <div id="debug-info">
+        <div>Status: <span id="game-status">Initializing...</span></div>
+        <div>Time: <span id="game-time">0s</span></div>
+        <div>Errors: <span id="error-count">0</span></div>
+    </div>
+
     <!-- Click to Start Overlay -->
     <div id="click-to-start">
         <div class="start-title">CYBER BATTLE ACADEMY</div>
@@ -96,7 +116,8 @@
         <button class="start-button" onclick="startGame()">🚀 CLICK TO START 🚀</button>
         <div class="instructions">
             Click anywhere to begin your cyber adventure!<br>
-            Audio and interactions will be enabled after your first click.
+            Audio and interactions will be enabled after your first click.<br>
+            <span style="color: #ffff00;">Auto-starting in <span id="countdown">5</span> seconds...</span>
         </div>
     </div>
     
@@ -108,12 +129,41 @@
     
     <script>
         let gameStarted = false;
+        let startTime = Date.now();
+        let errorCount = 0;
+        let countdownTimer = 5;
+        
+        // Update debug info
+        function updateDebugInfo() {
+            document.getElementById('game-time').textContent = Math.floor((Date.now() - startTime) / 1000) + 's';
+            document.getElementById('error-count').textContent = errorCount;
+        }
+        
+        // Auto-countdown
+        function updateCountdown() {
+            if (countdownTimer > 0 && !gameStarted) {
+                document.getElementById('countdown').textContent = countdownTimer;
+                countdownTimer--;
+                setTimeout(updateCountdown, 1000);
+            } else if (!gameStarted) {
+                console.log("Auto-starting game after countdown");
+                startGame();
+            }
+        }
+        
+        // Error tracking
+        window.addEventListener('error', (event) => {
+            errorCount++;
+            console.error('Global error:', event.error);
+            document.getElementById('game-status').textContent = 'Error: ' + event.error.message;
+        });
         
         function startGame() {
             if (gameStarted) return;
             gameStarted = true;
             
             console.log("User clicked to start - enabling audio and interactions");
+            document.getElementById('game-status').textContent = 'Loading game...';
             
             // Hide the start overlay
             const overlay = document.getElementById('click-to-start');
@@ -125,14 +175,33 @@
             }, 500);
             
             // Load the main game script
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = './packages/core/main.js';
-            document.head.appendChild(script);
+            try {
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = './packages/core/main.js';
+                script.onload = () => {
+                    console.log('Main script loaded successfully');
+                    document.getElementById('game-status').textContent = 'Game loaded';
+                };
+                script.onerror = (error) => {
+                    console.error('Failed to load main script:', error);
+                    document.getElementById('game-status').textContent = 'Failed to load game';
+                    errorCount++;
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Error loading game script:', error);
+                document.getElementById('game-status').textContent = 'Script error';
+                errorCount++;
+            }
         }
         
         // Also allow clicking anywhere on the overlay
         document.getElementById('click-to-start').addEventListener('click', startGame);
+        
+        // Start debug updates and countdown
+        setInterval(updateDebugInfo, 1000);
+        updateCountdown();
     </script>
 </body>
 

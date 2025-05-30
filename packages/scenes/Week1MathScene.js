@@ -2,10 +2,14 @@ import { Scene } from "phaser";
 import { UIManager } from "../utils/systems/UIManager.js";
 import { MathIntegrationSystem } from "../utils/systems/MathIntegrationSystem.js";
 import { InputController } from "../utils/systems/InputController.js";
+import { ProgressTracker } from "../utils/managers/index.js";
 
 export class Week1MathScene extends Scene {
     constructor() {
         super("Week1MathScene");
+        
+        // Initialize progress tracker
+        this.progressTracker = new ProgressTracker();
         
         // Game state
         this.score = 0;
@@ -22,6 +26,35 @@ export class Week1MathScene extends Scene {
         this.questionsAnswered = 0;
         this.correctAnswers = 0;
         this.maxStreak = 0;
+        
+        // 🤖 COMBAT SYSTEM - Character Stats
+        this.characterStats = {
+            attackPower: 1.0,    // Score multiplier for correct answers
+            defense: 0,          // Damage reduction for wrong answers
+            speed: 30,           // Base time per question (seconds)
+            accuracy: 0,         // Hint/assistance level
+            luck: 0,             // Coin/loot bonus
+            energy: 100,         // Special ability power
+            intelligence: 0      // Advanced strategy unlocks
+        };
+        
+        // 🤖 COMBAT SYSTEM - Robot Combat
+        this.playerRobot = null;
+        this.enemyRobot = null;
+        this.currentEnemy = null;
+        this.combatActive = false;
+        this.enemyHealth = 100;
+        this.maxEnemyHealth = 100;
+        this.combatAnimations = [];
+        this.damageNumbers = [];
+        
+        // 🤖 COMBAT SYSTEM - Equipment Effects
+        this.equippedItems = {
+            weapon: null,
+            shield: null,
+            tech: null,
+            core: null
+        };
         
         // Game objects
         this.player = null;
@@ -40,6 +73,12 @@ export class Week1MathScene extends Scene {
         this.mathPowerBar = null;
         this.mathPowerBarBg = null;
         this.streakText = null;
+        
+        // 🤖 COMBAT SYSTEM - Combat UI
+        this.enemyHealthBar = null;
+        this.enemyHealthBarBg = null;
+        this.combatStatsDisplay = null;
+        this.damageNumbersGroup = null;
         
         // Math quiz state
         this.currentQuestion = null;
@@ -88,13 +127,16 @@ export class Week1MathScene extends Scene {
         this.mathSystem = null;
         this.inputController = null;
         
-        console.log('Week1MathScene: Initialization complete');
+        console.log('Week1MathScene: Initialization complete with Combat System');
     }
 
     create() {
         console.log('Week1MathScene: Starting scene creation...');
         
         try {
+            // Initialize character stats from progress tracker
+            this.initializeCharacterStats();
+            
             // Initialize audio
             this.initializeAudio();
             
@@ -102,11 +144,16 @@ export class Week1MathScene extends Scene {
             this.createBackground();
             this.createArena();
             
-            // Create player
+            // 🤖 COMBAT SYSTEM - Create robots
+            this.createPlayerRobot();
+            this.createEnemyRobot();
+            
+            // Create player (keep for compatibility)
             this.createPlayer();
             
             // Create UI
             this.createUI();
+            this.createCombatUI();
             
             // Set up input
             this.setupInput();
@@ -120,12 +167,346 @@ export class Week1MathScene extends Scene {
             // Start game
             this.startGame();
             
-            console.log('Week1MathScene: Scene creation complete!');
+            console.log('Week1MathScene: Scene creation complete with Combat System!');
             
         } catch (error) {
             console.error('Week1MathScene: Error in create():', error);
             this.createErrorScreen(error);
         }
+    }
+
+    // 🤖 COMBAT SYSTEM - Initialize character stats from progress tracker
+    initializeCharacterStats() {
+        console.log('Week1MathScene: Initializing character stats...');
+        
+        try {
+            const character = this.progressTracker.getCharacter();
+            const charType = this.progressTracker.getCharacterType();
+            const progress = this.progressTracker.getProgressSummary();
+            
+            if (character && charType) {
+                // Base stats from character type
+                this.characterStats = {
+                    attackPower: 1.0 + (charType.baseStats?.attack || 0) * 0.1,
+                    defense: (charType.baseStats?.defense || 0) * 5,
+                    speed: 30 + (charType.baseStats?.speed || 0) * 2,
+                    accuracy: (charType.baseStats?.accuracy || 0) * 10,
+                    luck: (charType.baseStats?.luck || 0) * 5,
+                    energy: 100 + (charType.baseStats?.energy || 0) * 10,
+                    intelligence: (charType.baseStats?.intelligence || 0) * 5
+                };
+                
+                // Apply equipment bonuses
+                this.applyEquipmentBonuses();
+                
+                console.log('Week1MathScene: Character stats initialized:', this.characterStats);
+            } else {
+                console.warn('Week1MathScene: No character found, using default stats');
+            }
+        } catch (error) {
+            console.error('Week1MathScene: Error initializing character stats:', error);
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Apply equipment bonuses to stats
+    applyEquipmentBonuses() {
+        try {
+            const progress = this.progressTracker.getProgressSummary();
+            const equippedItems = progress.equippedItems || {};
+            
+            // Apply weapon bonuses
+            if (equippedItems.weapon) {
+                switch (equippedItems.weapon.id) {
+                    case 'plasma_sword':
+                        this.characterStats.attackPower += 0.25;
+                        break;
+                    case 'neural_disruptor':
+                        this.characterStats.attackPower += 0.5;
+                        break;
+                    case 'quantum_cannon':
+                        this.characterStats.attackPower += 1.0;
+                        break;
+                }
+            }
+            
+            // Apply shield bonuses
+            if (equippedItems.shield) {
+                switch (equippedItems.shield.id) {
+                    case 'energy_barrier':
+                        this.characterStats.defense += 25;
+                        break;
+                    case 'adaptive_armor':
+                        this.characterStats.defense += 35;
+                        break;
+                    case 'quantum_shield':
+                        this.characterStats.defense += 50;
+                        break;
+                }
+            }
+            
+            // Apply tech bonuses
+            if (equippedItems.tech) {
+                switch (equippedItems.tech.id) {
+                    case 'hint_scanner':
+                        this.characterStats.accuracy += 25;
+                        break;
+                    case 'time_dilator':
+                        this.characterStats.speed += 15;
+                        break;
+                    case 'answer_analyzer':
+                        this.characterStats.accuracy += 35;
+                        break;
+                }
+            }
+            
+            // Apply core bonuses
+            if (equippedItems.core) {
+                switch (equippedItems.core.id) {
+                    case 'xp_amplifier':
+                        this.characterStats.intelligence += 50;
+                        break;
+                    case 'coin_magnet':
+                        this.characterStats.luck += 100;
+                        break;
+                    case 'streak_keeper':
+                        this.characterStats.energy += 50;
+                        break;
+                }
+            }
+            
+            console.log('Week1MathScene: Equipment bonuses applied:', this.characterStats);
+        } catch (error) {
+            console.error('Week1MathScene: Error applying equipment bonuses:', error);
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Create player robot
+    createPlayerRobot() {
+        console.log('Week1MathScene: Creating player robot...');
+        
+        try {
+            const charType = this.progressTracker.getCharacterType();
+            
+            // Create robot container
+            this.playerRobot = this.add.container(200, 400);
+            
+            // Create robot graphic based on character type
+            const robotGraphic = this.createRobotGraphic(0, 0, charType || { 
+                id: 'default', 
+                baseColor: 0x00ffff, 
+                accentColor: 0xff00ff,
+                features: { sleek: true }
+            });
+            
+            this.playerRobot.add(robotGraphic);
+            
+            // Add idle animation
+            this.tweens.add({
+                targets: this.playerRobot,
+                y: 395,
+                duration: 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            console.log('Week1MathScene: Player robot created successfully');
+        } catch (error) {
+            console.error('Week1MathScene: Error creating player robot:', error);
+            // Fallback: create simple robot
+            this.playerRobot = this.add.container(200, 400);
+            const fallbackRobot = this.add.rectangle(0, 0, 40, 60, 0x00ffff);
+            this.playerRobot.add(fallbackRobot);
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Create enemy robot
+    createEnemyRobot() {
+        console.log('Week1MathScene: Creating enemy robot...');
+        
+        try {
+            // Create enemy robot container
+            this.enemyRobot = this.add.container(700, 400);
+            
+            // Create enemy robot graphic
+            const enemyGraphic = this.createEnemyRobotGraphic(0, 0);
+            this.enemyRobot.add(enemyGraphic);
+            
+            // Add menacing idle animation
+            this.tweens.add({
+                targets: this.enemyRobot,
+                y: 395,
+                duration: 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            // Initialize enemy health
+            this.enemyHealth = this.maxEnemyHealth;
+            
+            console.log('Week1MathScene: Enemy robot created successfully');
+        } catch (error) {
+            console.error('Week1MathScene: Error creating enemy robot:', error);
+            // Fallback: create simple enemy
+            this.enemyRobot = this.add.container(700, 400);
+            const fallbackEnemy = this.add.rectangle(0, 0, 40, 60, 0xff0000);
+            this.enemyRobot.add(fallbackEnemy);
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Create robot graphic (reuse from EducationalMenuScene)
+    createRobotGraphic(x, y, charType) {
+        console.log(`Creating robot graphic for ${charType.id || 'default'} at (${x}, ${y})`);
+        
+        // Create main container for the robot
+        const robotContainer = this.add.container(x, y);
+        
+        // Robot specifications based on character type
+        const robotSpecs = this.getRobotSpecifications(charType);
+        
+        // Create robot components
+        this.createRobotBase(robotContainer, robotSpecs);
+        this.createRobotTorso(robotContainer, robotSpecs);
+        this.createRobotHead(robotContainer, robotSpecs);
+        this.createRobotWeapons(robotContainer, robotSpecs);
+        
+        return robotContainer;
+    }
+
+    // 🤖 COMBAT SYSTEM - Get robot specifications
+    getRobotSpecifications(charType) {
+        const baseSpecs = {
+            scale: 0.8,
+            primaryColor: charType.baseColor || 0x00ffff,
+            accentColor: charType.accentColor || 0xff00ff,
+            glowColor: charType.accentColor || 0xff00ff,
+            size: { width: 50, height: 70 }
+        };
+
+        switch (charType.id) {
+            case 'aria':
+                return {
+                    ...baseSpecs,
+                    type: 'stealth',
+                    primaryColor: 0x3b82f6,
+                    accentColor: 0x00ffff,
+                    features: { sleek: true, angular: true }
+                };
+                
+            case 'titan':
+                return {
+                    ...baseSpecs,
+                    type: 'heavy',
+                    primaryColor: 0xef4444,
+                    accentColor: 0xffa500,
+                    features: { bulky: true, armored: true }
+                };
+                
+            case 'nexus':
+                return {
+                    ...baseSpecs,
+                    type: 'tech',
+                    primaryColor: 0x10b981,
+                    accentColor: 0xfbbf24,
+                    features: { modular: true, crystalline: true }
+                };
+                
+            default:
+                return baseSpecs;
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Create robot base
+    createRobotBase(container, specs) {
+        const base = this.add.graphics();
+        base.fillStyle(specs.primaryColor, 0.8);
+        base.fillRoundedRect(-15, 20, 30, 15, 5);
+        container.add(base);
+    }
+
+    // 🤖 COMBAT SYSTEM - Create robot torso
+    createRobotTorso(container, specs) {
+        const torso = this.add.graphics();
+        torso.fillStyle(specs.primaryColor, 0.9);
+        torso.fillRoundedRect(-12, -5, 24, 25, 6);
+        
+        // Add accent details
+        torso.fillStyle(specs.accentColor, 0.8);
+        torso.fillRoundedRect(-10, -3, 20, 5, 3);
+        torso.fillCircle(0, 5, 4);
+        
+        container.add(torso);
+    }
+
+    // 🤖 COMBAT SYSTEM - Create robot head
+    createRobotHead(container, specs) {
+        const head = this.add.graphics();
+        head.fillStyle(specs.primaryColor, 0.95);
+        head.fillRoundedRect(-8, -25, 16, 15, 4);
+        
+        // Add visor
+        head.fillStyle(specs.glowColor, 0.9);
+        head.fillRoundedRect(-6, -22, 12, 4, 2);
+        
+        container.add(head);
+    }
+
+    // 🤖 COMBAT SYSTEM - Create robot weapons
+    createRobotWeapons(container, specs) {
+        // Simple weapon representation
+        const weapon = this.add.graphics();
+        weapon.fillStyle(specs.accentColor, 0.9);
+        weapon.fillRoundedRect(15, -5, 8, 15, 2);
+        container.add(weapon);
+    }
+
+    // 🤖 COMBAT SYSTEM - Create enemy robot graphic
+    createEnemyRobotGraphic(x, y) {
+        const robotContainer = this.add.container(x, y);
+        
+        // Enemy robot - menacing red design
+        const specs = {
+            primaryColor: 0xff0000,
+            accentColor: 0xff6600,
+            glowColor: 0xff0000
+        };
+        
+        // Enemy base
+        const base = this.add.graphics();
+        base.fillStyle(specs.primaryColor, 0.8);
+        base.fillRoundedRect(-18, 20, 36, 18, 6);
+        robotContainer.add(base);
+        
+        // Enemy torso
+        const torso = this.add.graphics();
+        torso.fillStyle(specs.primaryColor, 0.9);
+        torso.fillRoundedRect(-15, -8, 30, 28, 8);
+        torso.fillStyle(specs.accentColor, 0.8);
+        torso.fillRoundedRect(-12, -5, 24, 6, 3);
+        torso.fillCircle(0, 8, 5);
+        robotContainer.add(torso);
+        
+        // Enemy head
+        const head = this.add.graphics();
+        head.fillStyle(specs.primaryColor, 0.95);
+        head.fillRoundedRect(-10, -30, 20, 18, 5);
+        head.fillStyle(specs.glowColor, 1.0);
+        head.fillRoundedRect(-8, -27, 16, 5, 2);
+        robotContainer.add(head);
+        
+        // Enemy weapons
+        const leftWeapon = this.add.graphics();
+        leftWeapon.fillStyle(specs.accentColor, 0.9);
+        leftWeapon.fillRoundedRect(-25, -5, 10, 18, 3);
+        robotContainer.add(leftWeapon);
+        
+        const rightWeapon = this.add.graphics();
+        rightWeapon.fillStyle(specs.accentColor, 0.9);
+        rightWeapon.fillRoundedRect(15, -5, 10, 18, 3);
+        robotContainer.add(rightWeapon);
+        
+        return robotContainer;
     }
 
     initializeAudio() {
@@ -204,51 +585,25 @@ export class Week1MathScene extends Scene {
         }
     }
 
-    createArena() {
-        // Enhanced arena with glowing effect
-        const arena = this.add.graphics();
-        
-        // Main border
-        arena.lineStyle(4, 0x00ffff, 0.8);
-        arena.strokeRect(this.arenaX, this.arenaY, this.arenaWidth, this.arenaHeight);
-        
-        // Glow effect
-        arena.lineStyle(8, 0x00ffff, 0.3);
-        arena.strokeRect(this.arenaX - 2, this.arenaY - 2, this.arenaWidth + 4, this.arenaHeight + 4);
-        
-        // Grid lines
-        arena.lineStyle(1, 0x00ffff, 0.2);
-        const gridSize = 50;
-        
-        for (let x = this.arenaX; x <= this.arenaX + this.arenaWidth; x += gridSize) {
-            arena.lineBetween(x, this.arenaY, x, this.arenaY + this.arenaHeight);
-        }
-        
-        for (let y = this.arenaY; y <= this.arenaY + this.arenaHeight; y += gridSize) {
-            arena.lineBetween(this.arenaX, y, this.arenaX + this.arenaWidth, y);
-        }
-    }
-
     createPlayer() {
-        // Enhanced player with glow effect
-        const playerX = this.arenaX + this.arenaWidth / 2;
-        const playerY = this.arenaY + this.arenaHeight / 2;
+        // Create player (keep for compatibility with existing systems)
+        this.player = this.add.circle(300, 400, 15, 0x00ff00);
+        this.player.setStrokeStyle(2, 0x00ff00);
         
-        // Player glow
-        this.playerGlow = this.add.circle(playerX, playerY, 25, 0x00aaff, 0.3);
+        // Player glow effect
+        this.playerGlow = this.add.circle(300, 400, 20, 0x00ff00, 0.3);
         
-        // Main player
-        this.player = this.add.rectangle(playerX, playerY, 40, 40, 0x00aaff);
-        this.player.setStrokeStyle(2, 0x00ffff);
-        
-        // Player stats
-        this.player.health = 100;
-        this.player.maxHealth = 100;
-        this.player.speed = 200;
-        this.player.lastShot = 0;
-        this.player.fireRate = 200;
-        
-        console.log('Week1MathScene: Player created');
+        // Pulsing animation
+        this.tweens.add({
+            targets: this.playerGlow,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            alpha: 0.1,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
     }
 
     createUI() {
@@ -413,69 +768,282 @@ export class Week1MathScene extends Scene {
         console.log('Week1MathScene: Game resumed');
     }
 
-    // Math system event handlers
+    // 🤖 COMBAT SYSTEM - Enhanced math answer handling
     onMathAnswerCorrect(data) {
-        console.log('Week1MathScene: Math answer correct', data);
+        console.log('Week1MathScene: Correct answer with combat integration!', data);
         
-        // Apply visual effects
-        this.createMathSuccessEffect();
-        
-        // Update math power display
-        this.mathPower = Math.min(this.maxMathPower, this.mathPower + (data.powerGained || 15));
-        this.updateUI();
+        try {
+            // Calculate damage based on character stats
+            const baseDamage = 25;
+            const damage = Math.floor(baseDamage * this.characterStats.attackPower);
+            const bonusScore = Math.floor(50 * this.characterStats.attackPower) + (this.streak * 10);
+            
+            // Apply damage to enemy
+            this.enemyHealth = Math.max(0, this.enemyHealth - damage);
+            this.updateEnemyHealthBar();
+            
+            // Update game stats
+            this.correctAnswers++;
+            this.questionsAnswered++;
+            this.streak++;
+            this.maxStreak = Math.max(this.maxStreak, this.streak);
+            this.score += bonusScore;
+            
+            // 🤖 COMBAT ANIMATION - Player robot attacks
+            this.performPlayerAttack(damage);
+            
+            // Create floating damage number
+            this.createFloatingDamageNumber(this.enemyRobot.x, this.enemyRobot.y - 50, damage, '#ff6600');
+            
+            // Create floating score text
+            this.createFloatingText(this.playerRobot.x, this.playerRobot.y - 50, `+${bonusScore}`, '#00ff00', '18px');
+            
+            // Award XP with intelligence bonus
+            const xpGain = Math.floor(10 * (1 + this.characterStats.intelligence / 100));
+            this.progressTracker.recordAnswer('math', true, data.timeSpent || 5, data.difficulty || 'medium');
+            
+            // Play success sound
+            this.playSound('correct');
+            
+            // Check if enemy is defeated
+            if (this.enemyHealth <= 0) {
+                this.onEnemyDefeated();
+            }
+            
+            // Update UI
+            this.updateUI();
+            
+            console.log(`Combat result: ${damage} damage dealt, ${bonusScore} score gained, ${xpGain} XP`);
+            
+        } catch (error) {
+            console.error('Week1MathScene: Error in onMathAnswerCorrect:', error);
+        }
     }
 
     onMathAnswerIncorrect(data) {
-        console.log('Week1MathScene: Math answer incorrect', data);
+        console.log('Week1MathScene: Incorrect answer with combat integration!', data);
         
-        // Apply visual effects
-        this.createMathFailureEffect();
-        
-        // Update math power display
-        this.mathPower = Math.max(0, this.mathPower - (data.powerLost || 10));
-        this.updateUI();
+        try {
+            // Calculate penalty with defense reduction
+            const basePenalty = 50;
+            const actualPenalty = Math.max(10, basePenalty - this.characterStats.defense);
+            
+            // Apply penalty
+            this.score = Math.max(0, this.score - actualPenalty);
+            this.questionsAnswered++;
+            this.streak = 0; // Reset streak unless player has streak keeper
+            
+            // Check for streak keeper equipment
+            const progress = this.progressTracker.getProgressSummary();
+            const equippedItems = progress.equippedItems || {};
+            if (equippedItems.core?.id === 'streak_keeper') {
+                this.streak = Math.max(1, this.streak); // Maintain at least 1 streak
+                this.createFloatingText(this.playerRobot.x, this.playerRobot.y - 30, 'STREAK SAVED!', '#ffd700', '14px');
+            }
+            
+            // 🤖 COMBAT ANIMATION - Enemy robot attacks player
+            this.performEnemyAttack(actualPenalty);
+            
+            // Create floating penalty number
+            this.createFloatingDamageNumber(this.playerRobot.x, this.playerRobot.y - 50, actualPenalty, '#ff0000');
+            
+            // Record the attempt
+            this.progressTracker.recordAnswer('math', false, data.timeSpent || 5, data.difficulty || 'medium');
+            
+            // Play failure sound
+            this.playSound('incorrect');
+            
+            // Update UI
+            this.updateUI();
+            
+            console.log(`Combat result: ${actualPenalty} penalty applied (reduced from ${basePenalty} by ${this.characterStats.defense} defense)`);
+            
+        } catch (error) {
+            console.error('Week1MathScene: Error in onMathAnswerIncorrect:', error);
+        }
     }
 
-    onPlayerHealthRestore(data) {
-        this.playerHealth = Math.min(this.maxPlayerHealth, this.playerHealth + data.amount);
-        this.updateUI();
+    // 🤖 COMBAT SYSTEM - Player robot attack animation
+    performPlayerAttack(damage) {
+        console.log(`Player robot attacking for ${damage} damage!`);
         
-        // Visual feedback
-        this.createHealingEffect(this.player.x, this.player.y);
+        // Attack animation
+        this.tweens.add({
+            targets: this.playerRobot,
+            x: this.playerRobot.x + 100,
+            duration: 200,
+            ease: 'Power2.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                // Create attack effect
+                this.createAttackEffect(this.enemyRobot.x - 30, this.enemyRobot.y, '#00ffff');
+                
+                // Enemy hit reaction
+                this.tweens.add({
+                    targets: this.enemyRobot,
+                    x: this.enemyRobot.x + 20,
+                    duration: 100,
+                    yoyo: true,
+                    ease: 'Power2.easeOut'
+                });
+                
+                // Screen shake for impact
+                this.cameras.main.shake(200, 0.01);
+            }
+        });
     }
 
-    onPlayerEnergyRestore(data) {
-        this.playerEnergy = Math.min(this.maxPlayerEnergy, this.playerEnergy + data.amount);
-        this.updateUI();
+    // 🤖 COMBAT SYSTEM - Enemy robot attack animation
+    performEnemyAttack(penalty) {
+        console.log(`Enemy robot attacking for ${penalty} penalty!`);
+        
+        // Enemy attack animation
+        this.tweens.add({
+            targets: this.enemyRobot,
+            x: this.enemyRobot.x - 100,
+            duration: 200,
+            ease: 'Power2.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                // Create attack effect
+                this.createAttackEffect(this.playerRobot.x + 30, this.playerRobot.y, '#ff0000');
+                
+                // Player hit reaction
+                this.tweens.add({
+                    targets: this.playerRobot,
+                    x: this.playerRobot.x - 20,
+                    duration: 100,
+                    yoyo: true,
+                    ease: 'Power2.easeOut'
+                });
+                
+                // Screen shake for impact
+                this.cameras.main.shake(150, 0.008);
+            }
+        });
     }
 
-    onPlayerDamage(data) {
-        this.playerHealth = Math.max(0, this.playerHealth - data.amount);
-        this.updateUI();
+    // 🤖 COMBAT SYSTEM - Create attack effect
+    createAttackEffect(x, y, color) {
+        const effect = this.add.graphics();
+        effect.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.8);
+        effect.fillCircle(x, y, 20);
         
-        // Check for low health trigger
-        const healthPercentage = this.playerHealth / this.maxPlayerHealth;
-        if (healthPercentage <= 0.3) {
-            this.events.emit('playerHealthLow', { 
-                healthPercentage: healthPercentage,
-                x: this.player.x,
-                y: this.player.y
+        // Expand and fade effect
+        this.tweens.add({
+            targets: effect,
+            scaleX: 3,
+            scaleY: 3,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2.easeOut',
+            onComplete: () => effect.destroy()
+        });
+        
+        // Add particles
+        for (let i = 0; i < 8; i++) {
+            const particle = this.add.circle(x, y, 3, Phaser.Display.Color.HexStringToColor(color).color);
+            const angle = (i / 8) * Math.PI * 2;
+            const distance = 50;
+            
+            this.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * distance,
+                y: y + Math.sin(angle) * distance,
+                alpha: 0,
+                duration: 400,
+                ease: 'Power2.easeOut',
+                onComplete: () => particle.destroy()
             });
         }
+    }
+
+    // 🤖 COMBAT SYSTEM - Create floating damage number
+    createFloatingDamageNumber(x, y, damage, color) {
+        const damageText = this.add.text(x, y, `-${damage}`, {
+            fontSize: '20px',
+            fontFamily: 'Courier, monospace',
+            fill: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
         
-        // Visual feedback
-        this.createDamageEffect();
+        this.tweens.add({
+            targets: damageText,
+            y: y - 50,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2.easeOut',
+            onComplete: () => damageText.destroy()
+        });
     }
 
-    onShowFloatingText(data) {
-        this.createFloatingText(data.x, data.y, data.text, data.color, data.fontSize);
+    // 🤖 COMBAT SYSTEM - Handle enemy defeat
+    onEnemyDefeated() {
+        console.log('Enemy robot defeated! Victory!');
+        
+        // Victory animation
+        this.tweens.add({
+            targets: this.enemyRobot,
+            alpha: 0.3,
+            scaleX: 0.8,
+            scaleY: 0.8,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Victory text
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 80, 'DEFEATED!', '#ff6600', '24px');
+        
+        // Award bonus XP and coins
+        const bonusXP = Math.floor(50 * (1 + this.characterStats.intelligence / 100));
+        const bonusCoins = Math.floor(25 * (1 + this.characterStats.luck / 100));
+        
+        this.progressTracker.addExperience(bonusXP);
+        this.progressTracker.addCoins(bonusCoins);
+        
+        // Show rewards
+        this.createFloatingText(this.scale.width / 2, 200, `+${bonusXP} XP  +${bonusCoins} Coins`, '#ffd700', '18px');
+        
+        // Spawn new enemy after delay
+        this.time.delayedCall(2000, () => {
+            this.spawnNewEnemy();
+        });
     }
 
+    // 🤖 COMBAT SYSTEM - Spawn new enemy
+    spawnNewEnemy() {
+        console.log('Spawning new enemy robot...');
+        
+        // Reset enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        // Reset enemy appearance
+        this.enemyRobot.setAlpha(1);
+        this.enemyRobot.setScale(1);
+        
+        // Entrance animation
+        this.enemyRobot.setX(900);
+        this.tweens.add({
+            targets: this.enemyRobot,
+            x: 700,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Announcement
+        this.createFloatingText(this.scale.width / 2, 150, 'NEW CHALLENGER!', '#ff0000', '20px');
+    }
+
+    // Helper method for floating text
     createFloatingText(x, y, text, color = '#ffffff', fontSize = '16px') {
         const floatingText = this.add.text(x, y, text, {
             fontSize: fontSize,
-            fontFamily: 'Arial',
-            color: color,
+            fontFamily: 'Courier, monospace',
+            fill: color,
+            fontStyle: 'bold',
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
@@ -486,111 +1054,9 @@ export class Week1MathScene extends Scene {
             y: y - 50,
             alpha: 0,
             duration: 1500,
-            ease: 'Power2',
+            ease: 'Power2.easeOut',
             onComplete: () => {
                 floatingText.destroy();
-            }
-        });
-    }
-
-    createHealingEffect(x, y) {
-        // Create green healing particles
-        for (let i = 0; i < 10; i++) {
-            const particle = this.add.circle(
-                x + (Math.random() - 0.5) * 40,
-                y + (Math.random() - 0.5) * 40,
-                Math.random() * 3 + 2,
-                0x00ff00,
-                0.8
-            );
-            
-            this.tweens.add({
-                targets: particle,
-                y: y - 30,
-                alpha: 0,
-                duration: 1000,
-                ease: 'Power2',
-                onComplete: () => particle.destroy()
-            });
-        }
-    }
-
-    startGame() {
-        this.isGameActive = true;
-        this.gameTimerCounter = 0;
-        this.enemySpawnTimer = 0;
-        this.mathQuizTimer = 0;
-        
-        // Show welcome message
-        this.showWelcomeMessage();
-        
-        // Start first math quiz after 3 seconds
-        this.time.delayedCall(3000, () => {
-            this.startMathQuiz();
-        });
-        
-        // Start spawning enemies after 5 seconds
-        this.time.delayedCall(5000, () => {
-            this.spawnEnemy();
-        });
-        
-        console.log('Week1MathScene: Game started');
-    }
-
-    showWelcomeMessage() {
-        const centerX = this.scale.width / 2;
-        const centerY = this.scale.height / 2;
-        
-        // Main title with glow effect
-        const titleGlow = this.add.text(centerX, centerY - 50, 'MATH COMBAT ARENA', {
-            fontSize: '42px',
-            fontFamily: 'Courier, monospace',
-            color: '#00ffff',
-            stroke: '#000000',
-            strokeThickness: 6
-        }).setOrigin(0.5);
-        
-        const titleText = this.add.text(centerX, centerY - 50, 'MATH COMBAT ARENA', {
-            fontSize: '36px',
-            fontFamily: 'Courier, monospace',
-            color: '#ffffff',
-            stroke: '#00ffff',
-            strokeThickness: 3
-        }).setOrigin(0.5);
-        
-        // Subtitle with enhanced styling
-        const instructionText = this.add.text(centerX, centerY, 
-            'Solve math problems to power up your combat abilities!\n' +
-            'Use WASD to move, SPACE to shoot\n' +
-            'Answer with number keys 1-4', {
-            fontSize: '18px',
-            fontFamily: 'Courier, monospace',
-            color: '#ffff00',
-            align: 'center',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        
-        // Pulsing effect for title
-        this.tweens.add({
-            targets: [titleGlow, titleText],
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 1000,
-            yoyo: true,
-            repeat: 1
-        });
-        
-        // Fade out after 4 seconds
-        this.tweens.add({
-            targets: [titleGlow, titleText, instructionText],
-            alpha: 0,
-            duration: 1500,
-            delay: 2500,
-            onComplete: () => {
-                titleGlow.destroy();
-                titleText.destroy();
-                instructionText.destroy();
             }
         });
     }
@@ -1005,24 +1471,22 @@ export class Week1MathScene extends Scene {
         const handleAnswer = (selectedIndex) => {
             if (!this.mathQuizActive) return;
             
-            this.questionsAnswered++;
-            
             const isCorrect = selectedIndex === this.currentQuestion.correctIndex;
+            const timeSpent = this.time.now - this.mathQuizStartTime;
             
+            // Use the proper event handlers for consistent tracking
             if (isCorrect) {
-                // Correct answer
-                this.correctAnswers++;
-                this.streak++;
-                this.maxStreak = Math.max(this.maxStreak, this.streak);
-                this.mathPower = Math.min(this.maxMathPower, this.mathPower + 25);
-                this.createMathSuccessEffect();
-                this.playSound('correct');
+                this.onMathAnswerCorrect({
+                    timeSpent: timeSpent,
+                    difficulty: 'medium',
+                    powerGained: 25
+                });
             } else {
-                // Wrong answer
-                this.streak = 0;
-                this.mathPower = Math.max(0, this.mathPower - 15);
-                this.createMathFailureEffect();
-                this.playSound('incorrect');
+                this.onMathAnswerIncorrect({
+                    timeSpent: timeSpent,
+                    difficulty: 'medium',
+                    powerLost: 15
+                });
             }
             
             this.hideMathQuizUI();
@@ -1277,6 +1741,21 @@ export class Week1MathScene extends Scene {
         // Calculate final stats
         const accuracy = this.questionsAnswered > 0 ? 
             (this.correctAnswers / this.questionsAnswered) * 100 : 0;
+        
+        // Record final score and complete week if performance is good enough
+        if (this.score > 0) {
+            // Add score to total progress
+            this.progressTracker.progress.totalScore += this.score;
+            
+            // Complete week 1 if accuracy is above 60% or if they answered at least 5 questions
+            if (accuracy >= 60 || this.questionsAnswered >= 5) {
+                this.progressTracker.completeWeek(1);
+                console.log('Week1MathScene: Week 1 completed! Accuracy:', accuracy.toFixed(1) + '%');
+            }
+            
+            // Save progress
+            this.progressTracker.saveProgress();
+        }
         
         this.showGameOverScreen(accuracy);
     }
@@ -1569,6 +2048,260 @@ export class Week1MathScene extends Scene {
                 this.scene.start('MenuScene');
             } catch (error) {
                 window.location.reload();
+            }
+        });
+    }
+
+    // 🤖 COMBAT SYSTEM - Create combat UI
+    createCombatUI() {
+        console.log('Week1MathScene: Creating combat UI...');
+        
+        try {
+            // Enemy health bar background
+            this.enemyHealthBarBg = this.add.graphics();
+            this.enemyHealthBarBg.fillStyle(0x333333, 0.8);
+            this.enemyHealthBarBg.fillRoundedRect(500, 50, 200, 20, 10);
+            this.enemyHealthBarBg.lineStyle(2, 0xff0000, 0.8);
+            this.enemyHealthBarBg.strokeRoundedRect(500, 50, 200, 20, 10);
+            
+            // Enemy health bar
+            this.enemyHealthBar = this.add.graphics();
+            this.updateEnemyHealthBar();
+            
+            // Enemy health text
+            this.enemyHealthText = this.add.text(600, 60, 'ENEMY: 100/100', {
+                fontSize: '12px',
+                fontFamily: 'Courier, monospace',
+                fill: '#ffffff',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            
+            // Combat stats display
+            this.combatStatsDisplay = this.add.text(50, 50, '', {
+                fontSize: '14px',
+                fontFamily: 'Courier, monospace',
+                fill: '#00ffff',
+                fontStyle: 'bold'
+            });
+            this.updateCombatStatsDisplay();
+            
+            // Damage numbers group
+            this.damageNumbersGroup = this.add.group();
+            
+            console.log('Week1MathScene: Combat UI created successfully');
+        } catch (error) {
+            console.error('Week1MathScene: Error creating combat UI:', error);
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Update enemy health bar
+    updateEnemyHealthBar() {
+        if (this.enemyHealthBar) {
+            this.enemyHealthBar.clear();
+            const healthPercent = this.enemyHealth / this.maxEnemyHealth;
+            const barWidth = 200 * healthPercent;
+            
+            // Health bar color based on health level
+            let healthColor = 0x00ff00; // Green
+            if (healthPercent < 0.6) healthColor = 0xffff00; // Yellow
+            if (healthPercent < 0.3) healthColor = 0xff0000; // Red
+            
+            this.enemyHealthBar.fillStyle(healthColor, 0.8);
+            this.enemyHealthBar.fillRoundedRect(500, 50, barWidth, 20, 10);
+        }
+        
+        if (this.enemyHealthText) {
+            this.enemyHealthText.setText(`ENEMY: ${Math.max(0, Math.floor(this.enemyHealth))}/${this.maxEnemyHealth}`);
+        }
+    }
+
+    // 🤖 COMBAT SYSTEM - Update combat stats display
+    updateCombatStatsDisplay() {
+        if (this.combatStatsDisplay) {
+            const stats = this.characterStats;
+            const displayText = [
+                `⚔️ ATK: ${(stats.attackPower * 100).toFixed(0)}%`,
+                `🛡️ DEF: ${stats.defense}`,
+                `⚡ SPD: ${stats.speed}s`,
+                `🎯 ACC: ${stats.accuracy}%`
+            ].join('  ');
+            
+            this.combatStatsDisplay.setText(displayText);
+        }
+    }
+
+    createArena() {
+        // Enhanced arena with glowing effect - now a battle arena!
+        const arena = this.add.graphics();
+        
+        // Main border with combat theme
+        arena.lineStyle(4, 0x00ffff, 0.8);
+        arena.strokeRect(this.arenaX, this.arenaY, this.arenaWidth, this.arenaHeight);
+        
+        // Glow effect
+        arena.lineStyle(8, 0x00ffff, 0.3);
+        arena.strokeRect(this.arenaX - 2, this.arenaY - 2, this.arenaWidth + 4, this.arenaHeight + 4);
+        
+        // Grid lines for battle arena feel
+        arena.lineStyle(1, 0x00ffff, 0.2);
+        const gridSize = 50;
+        
+        for (let x = this.arenaX; x <= this.arenaX + this.arenaWidth; x += gridSize) {
+            arena.lineBetween(x, this.arenaY, x, this.arenaY + this.arenaHeight);
+        }
+        
+        for (let y = this.arenaY; y <= this.arenaY + this.arenaHeight; y += gridSize) {
+            arena.lineBetween(this.arenaX, y, this.arenaX + this.arenaWidth, y);
+        }
+        
+        // Add battle arena title
+        this.add.text(this.scale.width / 2, 30, '⚔️ MATH COMBAT ARENA ⚔️', {
+            fontSize: '24px',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ffff',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+    }
+
+    // Restore essential methods
+    onPlayerHealthRestore(data) {
+        this.playerHealth = Math.min(this.maxPlayerHealth, this.playerHealth + data.amount);
+        this.updateUI();
+        
+        // Visual feedback
+        this.createHealingEffect(this.player.x, this.player.y);
+    }
+
+    onPlayerEnergyRestore(data) {
+        this.playerEnergy = Math.min(this.maxPlayerEnergy, this.playerEnergy + data.amount);
+        this.updateUI();
+    }
+
+    onPlayerDamage(data) {
+        this.playerHealth = Math.max(0, this.playerHealth - data.amount);
+        this.updateUI();
+        
+        // Check for low health trigger
+        const healthPercentage = this.playerHealth / this.maxPlayerHealth;
+        if (healthPercentage <= 0.3) {
+            this.events.emit('playerHealthLow', { 
+                healthPercentage: healthPercentage,
+                x: this.player.x,
+                y: this.player.y
+            });
+        }
+        
+        // Visual feedback
+        this.createDamageEffect();
+    }
+
+    onShowFloatingText(data) {
+        this.createFloatingText(data.x, data.y, data.text, data.color, data.fontSize);
+    }
+
+    createHealingEffect(x, y) {
+        // Create green healing particles
+        for (let i = 0; i < 10; i++) {
+            const particle = this.add.circle(
+                x + (Math.random() - 0.5) * 40,
+                y + (Math.random() - 0.5) * 40,
+                Math.random() * 3 + 2,
+                0x00ff00,
+                0.8
+            );
+            
+            this.tweens.add({
+                targets: particle,
+                y: y - 30,
+                alpha: 0,
+                duration: 1000,
+                ease: 'Power2.easeOut',
+                onComplete: () => particle.destroy()
+            });
+        }
+    }
+
+    startGame() {
+        this.isGameActive = true;
+        this.gameTimerCounter = 0;
+        this.enemySpawnTimer = 0;
+        this.mathQuizTimer = 0;
+        
+        // Show welcome message
+        this.showWelcomeMessage();
+        
+        // Start first math quiz after 3 seconds
+        this.time.delayedCall(3000, () => {
+            this.startMathQuiz();
+        });
+        
+        console.log('Week1MathScene: Combat game started');
+    }
+
+    showWelcomeMessage() {
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+        
+        // Main title with glow effect
+        const titleText = this.add.text(centerX, centerY - 50, '🤖 MATH COMBAT ARENA 🤖', {
+            fontSize: '36px',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ffff',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5);
+        
+        // Subtitle with enhanced styling
+        const instructionText = this.add.text(centerX, centerY, 
+            'Your robot battles enemies with math!\n' +
+            'Correct answers = Robot attacks\n' +
+            'Wrong answers = Enemy attacks\n' +
+            'Equipment boosts your combat stats!', {
+            fontSize: '16px',
+            fontFamily: 'Courier, monospace',
+            fill: '#ffff00',
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        // Character stats display
+        const statsText = this.add.text(centerX, centerY + 80, 
+            `⚔️ Attack: ${(this.characterStats.attackPower * 100).toFixed(0)}%  ` +
+            `🛡️ Defense: ${this.characterStats.defense}  ` +
+            `⚡ Speed: ${this.characterStats.speed}s  ` +
+            `🎯 Accuracy: ${this.characterStats.accuracy}%`, {
+            fontSize: '14px',
+            fontFamily: 'Courier, monospace',
+            fill: '#00ff00',
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5);
+        
+        // Pulsing effect for title
+        this.tweens.add({
+            targets: titleText,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 1000,
+            yoyo: true,
+            repeat: 1
+        });
+        
+        // Fade out after 4 seconds
+        this.tweens.add({
+            targets: [titleText, instructionText, statsText],
+            alpha: 0,
+            duration: 1500,
+            delay: 2500,
+            onComplete: () => {
+                titleText.destroy();
+                instructionText.destroy();
+                statsText.destroy();
             }
         });
     }
