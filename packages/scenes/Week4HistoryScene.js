@@ -1,11 +1,21 @@
 import { Scene } from "phaser";
 import { QuestionManager, ProgressTracker } from "../utils/managers/index.js";
+import { CombatSystem } from "../utils/systems/CombatSystem.js";
 
 export class Week4HistoryScene extends Scene {
     constructor() {
         super("Week4HistoryScene");
         this.questionManager = new QuestionManager();
         this.progressTracker = new ProgressTracker();
+        
+        // Combat System Integration
+        this.combatSystem = null;
+        this.characterStats = null;
+        this.playerRobot = null;
+        this.enemyRobot = null;
+        this.combatUI = null;
+        this.enemyHealth = 100;
+        this.maxEnemyHealth = 100;
         
         // Game state
         this.score = 0;
@@ -29,14 +39,24 @@ export class Week4HistoryScene extends Scene {
         
         // Get equipped item effects
         this.equippedEffects = this.progressTracker.getEquippedEffects();
+        
+        // Initialize character stats for combat
+        this.characterStats = this.progressTracker.getCharacterStats();
+        console.log("Week4HistoryScene: Character stats loaded:", this.characterStats);
     }
 
-    create() {
+    async create() {
+        // Initialize combat system first
+        await this.initializeCombatSystem();
+        
         // Create the spaceship environment
         this.createSpaceship();
         
         // Create player character
         this.createPlayer();
+        
+        // Create combat robots
+        this.createCombatRobots();
         
         // Create rooms and navigation
         this.createRooms();
@@ -47,7 +67,7 @@ export class Week4HistoryScene extends Scene {
         // Create impostor facts to find
         this.createImpostorFacts();
         
-        // Create UI
+        // Create UI (including combat UI)
         this.createUI();
         
         // Set up physics and interactions
@@ -56,8 +76,256 @@ export class Week4HistoryScene extends Scene {
         // Create controls
         this.createControls();
         
+        // Set up combat event listeners
+        this.setupCombatEventListeners();
+        
         // Show welcome message
         this.showWelcomeMessage();
+    }
+
+    async initializeCombatSystem() {
+        try {
+            console.log("Week4HistoryScene: Initializing combat system...");
+            this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+            await this.combatSystem.init();
+            console.log("Week4HistoryScene: Combat system initialized successfully");
+        } catch (error) {
+            console.error("Week4HistoryScene: Failed to initialize combat system:", error);
+            // Continue without combat system
+        }
+    }
+
+    setupCombatEventListeners() {
+        // Connect history task events to combat system
+        this.events.on('historyAnswerCorrect', (data) => {
+            if (this.combatSystem) {
+                const damage = this.combatSystem.onCorrectAnswer(data);
+                this.onHistoryAnswerCorrect(data);
+            }
+        });
+
+        this.events.on('historyAnswerIncorrect', (data) => {
+            if (this.combatSystem) {
+                const penalty = this.combatSystem.onIncorrectAnswer(data);
+                this.onHistoryAnswerIncorrect(data);
+            }
+        });
+    }
+
+    onHistoryAnswerCorrect(data) {
+        // Calculate damage based on character stats
+        const baseDamage = 30;
+        const damage = Math.floor(baseDamage * this.characterStats.attackPower);
+        
+        // Perform robot attack animation
+        this.performPlayerAttack(damage);
+        
+        // Apply history-specific bonuses
+        const historyBonus = Math.floor(this.score * 0.15);
+        this.score += (15 + historyBonus);
+        
+        // Award experience with intelligence bonus
+        const baseXP = 20;
+        const xpGained = Math.floor(baseXP * (1 + this.characterStats.intelligence / 100));
+        this.progressTracker.addExperience(xpGained);
+        
+        // Award coins with luck bonus
+        const baseCoins = 8;
+        const coinsGained = Math.floor(baseCoins * (1 + this.characterStats.luck / 100));
+        this.progressTracker.addCoins(coinsGained, "History Investigation Success");
+        
+        this.createFloatingText(this.scale.width / 2, 200, `+${xpGained} XP, +${coinsGained} Coins!`, '#00ff00');
+    }
+
+    onHistoryAnswerIncorrect(data) {
+        // Calculate penalty reduced by defense
+        const basePenalty = 20;
+        const penalty = Math.max(5, basePenalty - this.characterStats.defense);
+        
+        // Perform enemy attack animation
+        this.performEnemyAttack(penalty);
+        
+        // Apply penalty to score
+        this.score = Math.max(0, this.score - penalty);
+        
+        this.createFloatingText(this.scale.width / 2, 200, `-${penalty} Score`, '#ff0000');
+    }
+
+    createCombatRobots() {
+        if (!this.combatSystem) return;
+        
+        try {
+            // Create player robot (positioned in navigation area)
+            this.playerRobot = this.combatSystem.createPlayerRobot();
+            if (this.playerRobot) {
+                this.playerRobot.setPosition(120, 200);
+                this.playerRobot.setScale(0.5); // Smaller for spaceship
+            }
+            
+            // Create enemy robot (positioned in weapons area)
+            this.enemyRobot = this.combatSystem.createEnemyRobot();
+            if (this.enemyRobot) {
+                this.enemyRobot.setPosition(620, 500);
+                this.enemyRobot.setScale(0.5); // Smaller for spaceship
+            }
+            
+            // Create combat UI
+            this.combatUI = this.combatSystem.createCombatUI();
+            
+            console.log("Week4HistoryScene: Combat robots created successfully");
+        } catch (error) {
+            console.error("Week4HistoryScene: Error creating combat robots:", error);
+        }
+    }
+
+    performPlayerAttack(damage) {
+        if (!this.playerRobot || !this.enemyRobot) return;
+        
+        // Player robot attack animation
+        this.tweens.add({
+            targets: this.playerRobot,
+            scaleX: 0.6,
+            scaleY: 0.6,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Damage enemy
+        this.enemyHealth = Math.max(0, this.enemyHealth - damage);
+        
+        // Create attack effect
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#00ff00');
+        
+        // Create floating damage number
+        this.createFloatingDamageNumber(this.enemyRobot.x, this.enemyRobot.y - 30, damage, '#ffff00');
+        
+        // Update enemy health bar
+        this.updateEnemyHealthBar();
+        
+        // Check if enemy is defeated
+        if (this.enemyHealth <= 0) {
+            this.onEnemyDefeated();
+        }
+    }
+
+    performEnemyAttack(penalty) {
+        if (!this.enemyRobot || !this.playerRobot) return;
+        
+        // Enemy robot attack animation
+        this.tweens.add({
+            targets: this.enemyRobot,
+            scaleX: 0.6,
+            scaleY: 0.6,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Create attack effect on player
+        this.createAttackEffect(this.playerRobot.x, this.playerRobot.y, '#ff0000');
+        
+        // Screen shake for impact
+        this.cameras.main.shake(200, 0.01);
+    }
+
+    createAttackEffect(x, y, color) {
+        const effect = this.add.circle(x, y, 25, Phaser.Display.Color.HexStringToColor(color).color, 0.7);
+        
+        this.tweens.add({
+            targets: effect,
+            scaleX: 2,
+            scaleY: 2,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2.easeOut',
+            onComplete: () => effect.destroy()
+        });
+    }
+
+    createFloatingDamageNumber(x, y, damage, color) {
+        const damageText = this.add.text(x, y, damage.toString(), {
+            fontSize: '18px',
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: damageText,
+            y: y - 40,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2.easeOut',
+            onComplete: () => damageText.destroy()
+        });
+    }
+
+    onEnemyDefeated() {
+        // Victory effects
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#ffff00');
+        
+        // Bonus rewards for defeating enemy
+        const bonusXP = 60;
+        const bonusCoins = 30;
+        
+        this.progressTracker.addExperience(bonusXP);
+        this.progressTracker.addCoins(bonusCoins, "History Combat Victory");
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 50, 
+            `ENEMY DEFEATED! +${bonusXP} XP, +${bonusCoins} Coins!`, '#ffff00');
+        
+        // Spawn new enemy after delay
+        this.time.delayedCall(3000, () => {
+            this.spawnNewEnemy();
+        });
+    }
+
+    spawnNewEnemy() {
+        // Reset enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        // Enemy spawn effect
+        if (this.enemyRobot) {
+            this.enemyRobot.setAlpha(0);
+            this.tweens.add({
+                targets: this.enemyRobot,
+                alpha: 1,
+                duration: 500,
+                ease: 'Power2.easeOut'
+            });
+        }
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 30, 'NEW CHALLENGER!', '#ff00ff');
+    }
+
+    updateEnemyHealthBar() {
+        if (this.combatSystem && this.combatSystem.updateEnemyHealthBar) {
+            this.combatSystem.updateEnemyHealthBar();
+        }
+    }
+
+    createFloatingText(x, y, text, color = '#ffffff', fontSize = '16px') {
+        const floatingText = this.add.text(x, y, text, {
+            fontSize: fontSize,
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: floatingText,
+            y: y - 60,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2.easeOut',
+            onComplete: () => floatingText.destroy()
+        });
     }
 
     createSpaceship() {
@@ -581,13 +849,23 @@ export class Week4HistoryScene extends Scene {
         const isCorrect = this.questionManager.checkAnswer(selectedAnswer, this.currentQuestion.answer);
         
         if (isCorrect) {
+            // Trigger combat system event for correct answer
+            this.events.emit('historyAnswerCorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                isCorrect: true,
+                subject: 'history',
+                difficulty: 'medium'
+            });
+            
             // Award coins for correct history answer
             const coinsEarned = this.progressTracker.calculateCoinReward('medium', 0);
             this.progressTracker.recordAnswer('history', true, 0, 'medium');
             this.coinsEarned += coinsEarned;
             
             this.tasksCompleted++;
-            this.score += 100;
+            // Score is now handled by combat system, but add base score
+            this.score += 50; // Reduced since combat system adds more
             this.currentStation.completed = true;
             
             // Mark station as completed
@@ -599,11 +877,21 @@ export class Week4HistoryScene extends Scene {
             this.scoreText.setText(`Score: ${this.score}`);
             this.tasksText.setText(`Tasks: ${this.tasksCompleted}/${this.totalTasks}`);
             
-            this.showFeedback(`✅ Task Complete! +100 points, +${coinsEarned} coins`, 0x10b981);
+            this.showFeedback(`🤖 Investigation Success! Robot Attack Activated!`, 0x10b981);
             this.showCoinCollection(coinsEarned, this.scale.width / 2, this.scale.height / 2 + 100);
         } else {
+            // Trigger combat system event for incorrect answer
+            this.events.emit('historyAnswerIncorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                correctAnswer: this.currentQuestion.answer,
+                isCorrect: false,
+                subject: 'history',
+                difficulty: 'medium'
+            });
+            
             this.progressTracker.recordAnswer('history', false);
-            this.showFeedback(`❌ Try again! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
+            this.showFeedback(`❌ Enemy Counter-Attack! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
         }
         
         // Close overlay

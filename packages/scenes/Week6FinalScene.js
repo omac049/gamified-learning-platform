@@ -1,11 +1,21 @@
 import { Scene } from "phaser";
 import { QuestionManager, ProgressTracker } from "../utils/managers/index.js";
+import { CombatSystem } from "../utils/systems/CombatSystem.js";
 
 export class Week6FinalScene extends Scene {
     constructor() {
         super("Week6FinalScene");
         this.questionManager = new QuestionManager();
         this.progressTracker = new ProgressTracker();
+        
+        // Combat System Integration
+        this.combatSystem = null;
+        this.characterStats = null;
+        this.playerRobot = null;
+        this.enemyRobot = null;
+        this.combatUI = null;
+        this.enemyHealth = 200; // Higher health for final boss
+        this.maxEnemyHealth = 200;
         
         // Game state
         this.score = 0;
@@ -32,19 +42,29 @@ export class Week6FinalScene extends Scene {
         
         // Get equipped item effects
         this.equippedEffects = this.progressTracker.getEquippedEffects();
+        
+        // Initialize character stats for combat
+        this.characterStats = this.progressTracker.getCharacterStats();
+        console.log("Week6FinalScene: Character stats loaded:", this.characterStats);
     }
 
-    create() {
+    async create() {
+        // Initialize combat system first
+        await this.initializeCombatSystem();
+        
         // Create the epic final battle arena
         this.createBattleArena();
         
         // Create player character
         this.createPlayer();
         
+        // Create combat robots
+        this.createCombatRobots();
+        
         // Create final boss
         this.createFinalBoss();
         
-        // Create UI
+        // Create UI (including combat UI)
         this.createUI();
         
         // Set up physics and interactions
@@ -53,8 +73,256 @@ export class Week6FinalScene extends Scene {
         // Create controls
         this.createControls();
         
+        // Set up combat event listeners
+        this.setupCombatEventListeners();
+        
         // Show welcome message
         this.showWelcomeMessage();
+    }
+
+    async initializeCombatSystem() {
+        try {
+            console.log("Week6FinalScene: Initializing combat system...");
+            this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+            await this.combatSystem.init();
+            console.log("Week6FinalScene: Combat system initialized successfully");
+        } catch (error) {
+            console.error("Week6FinalScene: Failed to initialize combat system:", error);
+            // Continue without combat system
+        }
+    }
+
+    setupCombatEventListeners() {
+        // Connect final boss battle events to combat system
+        this.events.on('finalAnswerCorrect', (data) => {
+            if (this.combatSystem) {
+                const damage = this.combatSystem.onCorrectAnswer(data);
+                this.onFinalAnswerCorrect(data);
+            }
+        });
+
+        this.events.on('finalAnswerIncorrect', (data) => {
+            if (this.combatSystem) {
+                const penalty = this.combatSystem.onIncorrectAnswer(data);
+                this.onFinalAnswerIncorrect(data);
+            }
+        });
+    }
+
+    onFinalAnswerCorrect(data) {
+        // Calculate damage based on character stats (highest for final boss)
+        const baseDamage = 50;
+        const damage = Math.floor(baseDamage * this.characterStats.attackPower);
+        
+        // Perform robot attack animation
+        this.performPlayerAttack(damage);
+        
+        // Apply final boss bonuses
+        const finalBonus = Math.floor(this.score * 0.25);
+        this.score += (25 + finalBonus);
+        
+        // Award experience with intelligence bonus (highest for final)
+        const baseXP = 35;
+        const xpGained = Math.floor(baseXP * (1 + this.characterStats.intelligence / 100));
+        this.progressTracker.addExperience(xpGained);
+        
+        // Award coins with luck bonus (highest for final)
+        const baseCoins = 15;
+        const coinsGained = Math.floor(baseCoins * (1 + this.characterStats.luck / 100));
+        this.progressTracker.addCoins(coinsGained, "Final Boss Battle Success");
+        
+        this.createFloatingText(this.scale.width / 2, 200, `+${xpGained} XP, +${coinsGained} Coins!`, '#00ff00');
+    }
+
+    onFinalAnswerIncorrect(data) {
+        // Calculate penalty reduced by defense (highest for final boss)
+        const basePenalty = 30;
+        const penalty = Math.max(10, basePenalty - this.characterStats.defense);
+        
+        // Perform enemy attack animation
+        this.performEnemyAttack(penalty);
+        
+        // Apply penalty to score
+        this.score = Math.max(0, this.score - penalty);
+        
+        this.createFloatingText(this.scale.width / 2, 200, `-${penalty} Score`, '#ff0000');
+    }
+
+    createCombatRobots() {
+        if (!this.combatSystem) return;
+        
+        try {
+            // Create player robot (positioned in arena left)
+            this.playerRobot = this.combatSystem.createPlayerRobot();
+            if (this.playerRobot) {
+                this.playerRobot.setPosition(250, this.scale.height - 200);
+                this.playerRobot.setScale(0.8); // Larger for epic final battle
+            }
+            
+            // Create enemy robot (positioned in arena right)
+            this.enemyRobot = this.combatSystem.createEnemyRobot();
+            if (this.enemyRobot) {
+                this.enemyRobot.setPosition(this.scale.width - 250, this.scale.height - 200);
+                this.enemyRobot.setScale(0.8); // Larger for epic final battle
+            }
+            
+            // Create combat UI
+            this.combatUI = this.combatSystem.createCombatUI();
+            
+            console.log("Week6FinalScene: Combat robots created successfully");
+        } catch (error) {
+            console.error("Week6FinalScene: Error creating combat robots:", error);
+        }
+    }
+
+    performPlayerAttack(damage) {
+        if (!this.playerRobot || !this.enemyRobot) return;
+        
+        // Player robot attack animation
+        this.tweens.add({
+            targets: this.playerRobot,
+            scaleX: 0.9,
+            scaleY: 0.9,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Damage enemy
+        this.enemyHealth = Math.max(0, this.enemyHealth - damage);
+        
+        // Create attack effect
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#00ff00');
+        
+        // Create floating damage number
+        this.createFloatingDamageNumber(this.enemyRobot.x, this.enemyRobot.y - 30, damage, '#ffff00');
+        
+        // Update enemy health bar
+        this.updateEnemyHealthBar();
+        
+        // Check if enemy is defeated
+        if (this.enemyHealth <= 0) {
+            this.onEnemyDefeated();
+        }
+    }
+
+    performEnemyAttack(penalty) {
+        if (!this.enemyRobot || !this.playerRobot) return;
+        
+        // Enemy robot attack animation
+        this.tweens.add({
+            targets: this.enemyRobot,
+            scaleX: 0.9,
+            scaleY: 0.9,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Create attack effect on player
+        this.createAttackEffect(this.playerRobot.x, this.playerRobot.y, '#ff0000');
+        
+        // Screen shake for impact
+        this.cameras.main.shake(300, 0.02);
+    }
+
+    createAttackEffect(x, y, color) {
+        const effect = this.add.circle(x, y, 40, Phaser.Display.Color.HexStringToColor(color).color, 0.7);
+        
+        this.tweens.add({
+            targets: effect,
+            scaleX: 3,
+            scaleY: 3,
+            alpha: 0,
+            duration: 500,
+            ease: 'Power2.easeOut',
+            onComplete: () => effect.destroy()
+        });
+    }
+
+    createFloatingDamageNumber(x, y, damage, color) {
+        const damageText = this.add.text(x, y, damage.toString(), {
+            fontSize: '24px',
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 3,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: damageText,
+            y: y - 60,
+            alpha: 0,
+            duration: 1500,
+            ease: 'Power2.easeOut',
+            onComplete: () => damageText.destroy()
+        });
+    }
+
+    onEnemyDefeated() {
+        // Victory effects
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#ffff00');
+        
+        // Bonus rewards for defeating enemy (highest for final boss)
+        const bonusXP = 100;
+        const bonusCoins = 50;
+        
+        this.progressTracker.addExperience(bonusXP);
+        this.progressTracker.addCoins(bonusCoins, "Final Boss Combat Victory");
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 50, 
+            `FINAL BOSS DEFEATED! +${bonusXP} XP, +${bonusCoins} Coins!`, '#ffff00');
+        
+        // Spawn new enemy after delay
+        this.time.delayedCall(3000, () => {
+            this.spawnNewEnemy();
+        });
+    }
+
+    spawnNewEnemy() {
+        // Reset enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        // Enemy spawn effect
+        if (this.enemyRobot) {
+            this.enemyRobot.setAlpha(0);
+            this.tweens.add({
+                targets: this.enemyRobot,
+                alpha: 1,
+                duration: 500,
+                ease: 'Power2.easeOut'
+            });
+        }
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 30, 'FINAL CHALLENGER!', '#ff00ff');
+    }
+
+    updateEnemyHealthBar() {
+        if (this.combatSystem && this.combatSystem.updateEnemyHealthBar) {
+            this.combatSystem.updateEnemyHealthBar();
+        }
+    }
+
+    createFloatingText(x, y, text, color = '#ffffff', fontSize = '16px') {
+        const floatingText = this.add.text(x, y, text, {
+            fontSize: fontSize,
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: floatingText,
+            y: y - 80,
+            alpha: 0,
+            duration: 2500,
+            ease: 'Power2.easeOut',
+            onComplete: () => floatingText.destroy()
+        });
     }
 
     createBattleArena() {
@@ -492,6 +760,15 @@ export class Week6FinalScene extends Scene {
         this.questionsAnswered++;
         
         if (isCorrect) {
+            // Trigger combat system event for correct answer
+            this.events.emit('finalAnswerCorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                isCorrect: true,
+                subject: this.currentSubject,
+                difficulty: 'hard'
+            });
+            
             this.correctAnswers++;
             
             // Deal damage to boss
@@ -503,7 +780,8 @@ export class Week6FinalScene extends Scene {
             this.progressTracker.recordAnswer(this.currentSubject, true, 0, 'hard');
             this.coinsEarned += coinsEarned;
             
-            this.score += 200;
+            // Score is now handled by combat system, but add base score
+            this.score += 100; // Reduced since combat system adds more
             
             // Update UI
             this.coinBalanceText.setText(`🪙 ${this.progressTracker.getCoinBalance()}`);
@@ -517,7 +795,7 @@ export class Week6FinalScene extends Scene {
             this.bossHealthBar.setScale(healthPercent, 1);
             this.bossHealthText.setText(`${this.bossHealth}/${this.maxBossHealth}`);
             
-            this.showFeedback(`⚔️ Critical Hit! ${damage} damage dealt! +${coinsEarned} coins`, 0x10b981);
+            this.showFeedback(`🤖 Epic Robot Attack! Dragon takes ${damage} damage! +${coinsEarned} coins`, 0x10b981);
             this.showCoinCollection(coinsEarned, this.scale.width / 2, this.scale.height / 2 + 100);
             
             // Check if stage completed
@@ -525,10 +803,20 @@ export class Week6FinalScene extends Scene {
                 this.completeStage();
             }
         } else {
+            // Trigger combat system event for incorrect answer
+            this.events.emit('finalAnswerIncorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                correctAnswer: this.currentQuestion.answer,
+                isCorrect: false,
+                subject: this.currentSubject,
+                difficulty: 'hard'
+            });
+            
             this.progressTracker.recordAnswer(this.currentSubject, false);
             this.accuracyText.setText(`Accuracy: ${Math.round((this.correctAnswers / this.questionsAnswered) * 100)}%`);
             this.questionsText.setText(`Questions: ${this.questionsAnswered}`);
-            this.showFeedback(`❌ Miss! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
+            this.showFeedback(`❌ Dragon Counter-Attack! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
         }
         
         // Close overlay

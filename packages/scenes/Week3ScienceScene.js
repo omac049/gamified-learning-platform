@@ -1,11 +1,21 @@
 import { Scene } from "phaser";
 import { QuestionManager, ProgressTracker } from "../utils/managers/index.js";
+import { CombatSystem } from "../utils/systems/CombatSystem.js";
 
 export class Week3ScienceScene extends Scene {
     constructor() {
         super("Week3ScienceScene");
         this.questionManager = new QuestionManager();
         this.progressTracker = new ProgressTracker();
+        
+        // Combat System Integration
+        this.combatSystem = null;
+        this.characterStats = null;
+        this.playerRobot = null;
+        this.enemyRobot = null;
+        this.combatUI = null;
+        this.enemyHealth = 100;
+        this.maxEnemyHealth = 100;
         
         // Game state
         this.score = 0;
@@ -33,14 +43,24 @@ export class Week3ScienceScene extends Scene {
         
         // Get equipped item effects
         this.equippedEffects = this.progressTracker.getEquippedEffects();
+        
+        // Initialize character stats for combat
+        this.characterStats = this.progressTracker.getCharacterStats();
+        console.log("Week3ScienceScene: Character stats loaded:", this.characterStats);
     }
 
-    create() {
+    async create() {
+        // Initialize combat system first
+        await this.initializeCombatSystem();
+        
         // Create the Minecraft-style science world
         this.createWorld();
         
         // Create player character
         this.createPlayer();
+        
+        // Create combat robots
+        this.createCombatRobots();
         
         // Create collectible blocks
         this.createBlocks();
@@ -48,7 +68,7 @@ export class Week3ScienceScene extends Scene {
         // Create experiment stations
         this.createExperimentStations();
         
-        // Create UI
+        // Create UI (including combat UI)
         this.createUI();
         
         // Set up physics and interactions
@@ -57,8 +77,256 @@ export class Week3ScienceScene extends Scene {
         // Create controls
         this.createControls();
         
+        // Set up combat event listeners
+        this.setupCombatEventListeners();
+        
         // Show welcome message
         this.showWelcomeMessage();
+    }
+
+    async initializeCombatSystem() {
+        try {
+            console.log("Week3ScienceScene: Initializing combat system...");
+            this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+            await this.combatSystem.init();
+            console.log("Week3ScienceScene: Combat system initialized successfully");
+        } catch (error) {
+            console.error("Week3ScienceScene: Failed to initialize combat system:", error);
+            // Continue without combat system
+        }
+    }
+
+    setupCombatEventListeners() {
+        // Connect science experiment events to combat system
+        this.events.on('scienceAnswerCorrect', (data) => {
+            if (this.combatSystem) {
+                const damage = this.combatSystem.onCorrectAnswer(data);
+                this.onScienceAnswerCorrect(data);
+            }
+        });
+
+        this.events.on('scienceAnswerIncorrect', (data) => {
+            if (this.combatSystem) {
+                const penalty = this.combatSystem.onIncorrectAnswer(data);
+                this.onScienceAnswerIncorrect(data);
+            }
+        });
+    }
+
+    onScienceAnswerCorrect(data) {
+        // Calculate damage based on character stats
+        const baseDamage = 25;
+        const damage = Math.floor(baseDamage * this.characterStats.attackPower);
+        
+        // Perform robot attack animation
+        this.performPlayerAttack(damage);
+        
+        // Apply science-specific bonuses
+        const scienceBonus = Math.floor(this.score * 0.1);
+        this.score += (10 + scienceBonus);
+        
+        // Award experience with intelligence bonus
+        const baseXP = 15;
+        const xpGained = Math.floor(baseXP * (1 + this.characterStats.intelligence / 100));
+        this.progressTracker.addExperience(xpGained);
+        
+        // Award coins with luck bonus
+        const baseCoins = 5;
+        const coinsGained = Math.floor(baseCoins * (1 + this.characterStats.luck / 100));
+        this.progressTracker.addCoins(coinsGained, "Science Experiment Success");
+        
+        this.createFloatingText(this.scale.width / 2, 200, `+${xpGained} XP, +${coinsGained} Coins!`, '#00ff00');
+    }
+
+    onScienceAnswerIncorrect(data) {
+        // Calculate penalty reduced by defense
+        const basePenalty = 15;
+        const penalty = Math.max(5, basePenalty - this.characterStats.defense);
+        
+        // Perform enemy attack animation
+        this.performEnemyAttack(penalty);
+        
+        // Apply penalty to score
+        this.score = Math.max(0, this.score - penalty);
+        
+        this.createFloatingText(this.scale.width / 2, 200, `-${penalty} Score`, '#ff0000');
+    }
+
+    createCombatRobots() {
+        if (!this.combatSystem) return;
+        
+        try {
+            // Create player robot (positioned in lab area)
+            this.playerRobot = this.combatSystem.createPlayerRobot();
+            if (this.playerRobot) {
+                this.playerRobot.setPosition(150, this.scale.height - 300);
+                this.playerRobot.setScale(0.6); // Smaller for science lab
+            }
+            
+            // Create enemy robot (positioned in greenhouse area)
+            this.enemyRobot = this.combatSystem.createEnemyRobot();
+            if (this.enemyRobot) {
+                this.enemyRobot.setPosition(700, this.scale.height - 300);
+                this.enemyRobot.setScale(0.6); // Smaller for science lab
+            }
+            
+            // Create combat UI
+            this.combatUI = this.combatSystem.createCombatUI();
+            
+            console.log("Week3ScienceScene: Combat robots created successfully");
+        } catch (error) {
+            console.error("Week3ScienceScene: Error creating combat robots:", error);
+        }
+    }
+
+    performPlayerAttack(damage) {
+        if (!this.playerRobot || !this.enemyRobot) return;
+        
+        // Player robot attack animation
+        this.tweens.add({
+            targets: this.playerRobot,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Damage enemy
+        this.enemyHealth = Math.max(0, this.enemyHealth - damage);
+        
+        // Create attack effect
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#00ff00');
+        
+        // Create floating damage number
+        this.createFloatingDamageNumber(this.enemyRobot.x, this.enemyRobot.y - 30, damage, '#ffff00');
+        
+        // Update enemy health bar
+        this.updateEnemyHealthBar();
+        
+        // Check if enemy is defeated
+        if (this.enemyHealth <= 0) {
+            this.onEnemyDefeated();
+        }
+    }
+
+    performEnemyAttack(penalty) {
+        if (!this.enemyRobot || !this.playerRobot) return;
+        
+        // Enemy robot attack animation
+        this.tweens.add({
+            targets: this.enemyRobot,
+            scaleX: 0.7,
+            scaleY: 0.7,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Create attack effect on player
+        this.createAttackEffect(this.playerRobot.x, this.playerRobot.y, '#ff0000');
+        
+        // Screen shake for impact
+        this.cameras.main.shake(200, 0.01);
+    }
+
+    createAttackEffect(x, y, color) {
+        const effect = this.add.circle(x, y, 30, Phaser.Display.Color.HexStringToColor(color).color, 0.7);
+        
+        this.tweens.add({
+            targets: effect,
+            scaleX: 2,
+            scaleY: 2,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2.easeOut',
+            onComplete: () => effect.destroy()
+        });
+    }
+
+    createFloatingDamageNumber(x, y, damage, color) {
+        const damageText = this.add.text(x, y, damage.toString(), {
+            fontSize: '20px',
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: damageText,
+            y: y - 50,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2.easeOut',
+            onComplete: () => damageText.destroy()
+        });
+    }
+
+    onEnemyDefeated() {
+        // Victory effects
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#ffff00');
+        
+        // Bonus rewards for defeating enemy
+        const bonusXP = 50;
+        const bonusCoins = 25;
+        
+        this.progressTracker.addExperience(bonusXP);
+        this.progressTracker.addCoins(bonusCoins, "Science Combat Victory");
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 50, 
+            `ENEMY DEFEATED! +${bonusXP} XP, +${bonusCoins} Coins!`, '#ffff00');
+        
+        // Spawn new enemy after delay
+        this.time.delayedCall(3000, () => {
+            this.spawnNewEnemy();
+        });
+    }
+
+    spawnNewEnemy() {
+        // Reset enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        // Enemy spawn effect
+        if (this.enemyRobot) {
+            this.enemyRobot.setAlpha(0);
+            this.tweens.add({
+                targets: this.enemyRobot,
+                alpha: 1,
+                duration: 500,
+                ease: 'Power2.easeOut'
+            });
+        }
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 30, 'NEW CHALLENGER!', '#ff00ff');
+    }
+
+    updateEnemyHealthBar() {
+        if (this.combatSystem && this.combatSystem.updateEnemyHealthBar) {
+            this.combatSystem.updateEnemyHealthBar();
+        }
+    }
+
+    createFloatingText(x, y, text, color = '#ffffff', fontSize = '16px') {
+        const floatingText = this.add.text(x, y, text, {
+            fontSize: fontSize,
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: floatingText,
+            y: y - 60,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2.easeOut',
+            onComplete: () => floatingText.destroy()
+        });
     }
 
     createWorld() {
@@ -609,13 +877,23 @@ export class Week3ScienceScene extends Scene {
         const isCorrect = this.questionManager.checkAnswer(selectedAnswer, this.currentQuestion.answer);
         
         if (isCorrect) {
+            // Trigger combat system event for correct answer
+            this.events.emit('scienceAnswerCorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                isCorrect: true,
+                subject: 'science',
+                difficulty: 'medium'
+            });
+            
             // Award coins for correct science answer
             const coinsEarned = this.progressTracker.calculateCoinReward('medium', 0);
             this.progressTracker.recordAnswer('science', true, 0, 'medium');
             this.coinsEarned += coinsEarned;
             
             this.experimentsCompleted++;
-            this.score += 100;
+            // Score is now handled by combat system, but add base score
+            this.score += 50; // Reduced since combat system adds more
             
             // Update UI
             this.coinBalanceText.setText(`🪙 ${this.progressTracker.getCoinBalance()}`);
@@ -623,7 +901,7 @@ export class Week3ScienceScene extends Scene {
             this.scoreText.setText(`Score: ${this.score}`);
             this.experimentsText.setText(`Experiments: ${this.experimentsCompleted}/4`);
             
-            this.showFeedback(`🧪 Experiment Success! +100 points, +${coinsEarned} coins`, 0x10b981);
+            this.showFeedback(`🧪 Experiment Success! Robot Attack Activated!`, 0x10b981);
             this.showCoinCollection(coinsEarned, this.scale.width / 2, this.scale.height / 2 + 100);
             
             // Check if all experiments completed
@@ -632,8 +910,18 @@ export class Week3ScienceScene extends Scene {
                 this.endGame(true);
             }
         } else {
+            // Trigger combat system event for incorrect answer
+            this.events.emit('scienceAnswerIncorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                correctAnswer: this.currentQuestion.answer,
+                isCorrect: false,
+                subject: 'science',
+                difficulty: 'medium'
+            });
+            
             this.progressTracker.recordAnswer('science', false);
-            this.showFeedback(`❌ Try again! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
+            this.showFeedback(`❌ Enemy Counter-Attack! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
         }
         
         // Close overlay

@@ -1329,8 +1329,14 @@ export class Week1MathScene extends Scene {
     }
 
     checkMathQuiz(time) {
-        // Start math quiz every 30 seconds
-        if (!this.mathQuizActive && time - this.mathQuizTimer > 30000) {
+        // Start math quiz every 45 seconds (increased for better pacing)
+        // Also ensure player has had some time to play before first quiz
+        const quizInterval = 45000;
+        const firstQuizDelay = 10000; // Wait 10 seconds before first quiz
+        
+        if (!this.mathQuizActive && 
+            time - this.mathQuizTimer > quizInterval && 
+            time > firstQuizDelay) {
             this.startMathQuiz();
             this.mathQuizTimer = time;
         }
@@ -1340,6 +1346,8 @@ export class Week1MathScene extends Scene {
         if (this.mathQuizActive) return;
         
         this.mathQuizActive = true;
+        this.timeoutHandled = false;
+        this.timerPulseActive = false;
         this.currentQuestion = this.generateMathQuestion();
         this.showMathQuizUI();
         
@@ -1400,14 +1408,18 @@ export class Week1MathScene extends Scene {
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
         
-        // Background
+        // Background - start invisible for animation
         this.mathQuizBg = this.add.rectangle(centerX, centerY, 450, 350, 0x000000, 0.9);
         this.mathQuizBg.setStrokeStyle(4, 0x00ffff, 0.8);
+        this.mathQuizBg.setAlpha(0);
+        this.mathQuizBg.setScale(0.8);
         
-        // Background glow
+        // Background glow - start invisible
         this.mathQuizBgGlow = this.add.rectangle(centerX, centerY, 460, 360, 0x00ffff, 0.1);
+        this.mathQuizBgGlow.setAlpha(0);
+        this.mathQuizBgGlow.setScale(0.8);
         
-        // Question
+        // Question - start invisible and scaled down
         this.mathQuizQuestion = this.add.text(centerX, centerY - 100, this.currentQuestion.question, {
             fontSize: '36px',
             fontFamily: 'Courier, monospace',
@@ -1415,18 +1427,10 @@ export class Week1MathScene extends Scene {
             stroke: '#00ffff',
             strokeThickness: 2
         }).setOrigin(0.5);
+        this.mathQuizQuestion.setAlpha(0);
+        this.mathQuizQuestion.setScale(0.5);
         
-        // Pulsing effect for question
-        this.tweens.add({
-            targets: this.mathQuizQuestion,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 800,
-            yoyo: true,
-            repeat: -1
-        });
-        
-        // Choices
+        // Choices - start invisible and offset
         this.mathQuizChoices = [];
         for (let i = 0; i < 4; i++) {
             const choiceY = centerY - 30 + (i * 45);
@@ -1434,6 +1438,8 @@ export class Week1MathScene extends Scene {
             // Choice background
             const choiceBg = this.add.rectangle(centerX, choiceY, 300, 35, 0x333333, 0.8);
             choiceBg.setStrokeStyle(2, 0xffff00);
+            choiceBg.setAlpha(0);
+            choiceBg.setX(centerX - 100); // Start offset to the left
             
             const choice = this.add.text(centerX, choiceY, `${i + 1}. ${this.currentQuestion.choices[i]}`, {
                 fontSize: '22px',
@@ -1442,11 +1448,13 @@ export class Week1MathScene extends Scene {
                 stroke: '#000000',
                 strokeThickness: 2
             }).setOrigin(0.5);
+            choice.setAlpha(0);
+            choice.setX(centerX - 100); // Start offset to the left
             
             this.mathQuizChoices.push({ text: choice, bg: choiceBg });
         }
         
-        // Instructions
+        // Instructions - start invisible
         this.mathQuizInstructions = this.add.text(centerX, centerY + 120, 'Press 1, 2, 3, or 4 to answer quickly!', {
             fontSize: '18px',
             fontFamily: 'Courier, monospace',
@@ -1454,17 +1462,87 @@ export class Week1MathScene extends Scene {
             stroke: '#000000',
             strokeThickness: 2
         }).setOrigin(0.5);
+        this.mathQuizInstructions.setAlpha(0);
+        this.mathQuizInstructions.setY(centerY + 150); // Start lower
         
-        // Timer bar
+        // Timer bar - start invisible
         this.mathQuizTimerBg = this.add.rectangle(centerX, centerY + 150, 400, 10, 0x333333);
         this.mathQuizTimerBar = this.add.rectangle(centerX, centerY + 150, 400, 10, 0x00ff00);
+        this.mathQuizTimerBg.setAlpha(0);
+        this.mathQuizTimerBar.setAlpha(0);
+        
+        // Smooth entrance animation sequence
+        this.createQuizEntranceAnimation();
         
         // Set up input handlers
         this.setupMathQuizInput();
         
         // Start timer countdown
-        this.mathQuizTimeLeft = 10000; // 10 seconds
+        this.mathQuizTimeLeft = 15000; // Increased to 15 seconds for better UX
         this.mathQuizStartTime = this.time.now;
+    }
+
+    createQuizEntranceAnimation() {
+        // Animate background first
+        this.tweens.add({
+            targets: [this.mathQuizBg, this.mathQuizBgGlow],
+            alpha: 1,
+            scale: 1,
+            duration: 400,
+            ease: 'Back.easeOut',
+            onComplete: () => {
+                // Then animate question
+                this.tweens.add({
+                    targets: this.mathQuizQuestion,
+                    alpha: 1,
+                    scale: 1,
+                    duration: 300,
+                    ease: 'Back.easeOut',
+                    onComplete: () => {
+                        // Start pulsing effect for question
+                        this.tweens.add({
+                            targets: this.mathQuizQuestion,
+                            scaleX: 1.05,
+                            scaleY: 1.05,
+                            duration: 1000,
+                            yoyo: true,
+                            repeat: -1,
+                            ease: 'Sine.easeInOut'
+                        });
+                        
+                        // Animate choices with stagger
+                        this.mathQuizChoices.forEach((choice, index) => {
+                            this.tweens.add({
+                                targets: [choice.bg, choice.text],
+                                alpha: 1,
+                                x: this.scale.width / 2,
+                                duration: 250,
+                                delay: index * 100,
+                                ease: 'Power2.easeOut'
+                            });
+                        });
+                        
+                        // Finally animate instructions and timer
+                        this.tweens.add({
+                            targets: this.mathQuizInstructions,
+                            alpha: 1,
+                            y: this.scale.height / 2 + 120,
+                            duration: 300,
+                            delay: 400,
+                            ease: 'Power2.easeOut'
+                        });
+                        
+                        this.tweens.add({
+                            targets: [this.mathQuizTimerBg, this.mathQuizTimerBar],
+                            alpha: 1,
+                            duration: 300,
+                            delay: 500,
+                            ease: 'Power2.easeOut'
+                        });
+                    }
+                });
+            }
+        });
     }
 
     setupMathQuizInput() {
@@ -1473,6 +1551,9 @@ export class Week1MathScene extends Scene {
             
             const isCorrect = selectedIndex === this.currentQuestion.correctIndex;
             const timeSpent = this.time.now - this.mathQuizStartTime;
+            
+            // Show immediate visual feedback before hiding UI
+            this.showAnswerFeedback(selectedIndex, isCorrect);
             
             // Use the proper event handlers for consistent tracking
             if (isCorrect) {
@@ -1489,7 +1570,10 @@ export class Week1MathScene extends Scene {
                 });
             }
             
-            this.hideMathQuizUI();
+            // Delay hiding UI to show feedback
+            this.time.delayedCall(1500, () => {
+                this.hideMathQuizUI();
+            });
         };
         
         // Number key handlers
@@ -1499,22 +1583,163 @@ export class Week1MathScene extends Scene {
         this.numberKeys.FOUR.on('down', () => handleAnswer(3));
     }
 
+    showAnswerFeedback(selectedIndex, isCorrect) {
+        // Highlight the selected answer
+        const selectedChoice = this.mathQuizChoices[selectedIndex];
+        if (selectedChoice) {
+            const feedbackColor = isCorrect ? 0x00ff00 : 0xff0000;
+            selectedChoice.bg.setFillStyle(feedbackColor, 0.8);
+            selectedChoice.bg.setStrokeStyle(3, feedbackColor);
+            
+            // Pulse animation for selected choice
+            this.tweens.add({
+                targets: [selectedChoice.bg, selectedChoice.text],
+                scaleX: 1.1,
+                scaleY: 1.1,
+                duration: 200,
+                yoyo: true,
+                repeat: 2,
+                ease: 'Power2.easeOut'
+            });
+        }
+        
+        // Show correct answer if wrong
+        if (!isCorrect) {
+            const correctChoice = this.mathQuizChoices[this.currentQuestion.correctIndex];
+            if (correctChoice) {
+                correctChoice.bg.setFillStyle(0x00ff00, 0.6);
+                correctChoice.bg.setStrokeStyle(2, 0x00ff00);
+            }
+        }
+        
+        // Show feedback text
+        const feedbackText = isCorrect ? 
+            "🎯 CORRECT! Robot Attack Activated!" : 
+            "❌ INCORRECT! Enemy Counter-Attack!";
+        const feedbackColor = isCorrect ? '#00ff00' : '#ff0000';
+        
+        const feedback = this.add.text(this.scale.width / 2, this.scale.height / 2 + 180, feedbackText, {
+            fontSize: '20px',
+            fontFamily: 'Courier, monospace',
+            color: feedbackColor,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Animate feedback text
+        feedback.setAlpha(0);
+        feedback.setScale(0.5);
+        this.tweens.add({
+            targets: feedback,
+            alpha: 1,
+            scale: 1,
+            duration: 300,
+            ease: 'Back.easeOut'
+        });
+        
+        // Store feedback for cleanup
+        this.mathQuizFeedback = feedback;
+    }
+
+    showTimeoutFeedback() {
+        // Show correct answer
+        const correctChoice = this.mathQuizChoices[this.currentQuestion.correctIndex];
+        if (correctChoice) {
+            correctChoice.bg.setFillStyle(0x00ff00, 0.6);
+            correctChoice.bg.setStrokeStyle(3, 0x00ff00);
+            
+            // Pulse animation for correct answer
+            this.tweens.add({
+                targets: [correctChoice.bg, correctChoice.text],
+                scaleX: 1.1,
+                scaleY: 1.1,
+                duration: 300,
+                yoyo: true,
+                repeat: 3,
+                ease: 'Power2.easeOut'
+            });
+        }
+        
+        // Show timeout feedback text
+        const timeoutText = "⏰ TIME'S UP! The correct answer was highlighted.";
+        
+        const feedback = this.add.text(this.scale.width / 2, this.scale.height / 2 + 180, timeoutText, {
+            fontSize: '18px',
+            fontFamily: 'Courier, monospace',
+            color: '#ffaa00',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Animate feedback text
+        feedback.setAlpha(0);
+        feedback.setScale(0.5);
+        this.tweens.add({
+            targets: feedback,
+            alpha: 1,
+            scale: 1,
+            duration: 400,
+            ease: 'Back.easeOut'
+        });
+        
+        // Store feedback for cleanup
+        this.mathQuizFeedback = feedback;
+    }
+
     hideMathQuizUI() {
         this.mathQuizActive = false;
         
-        if (this.mathQuizBg) this.mathQuizBg.destroy();
-        if (this.mathQuizBgGlow) this.mathQuizBgGlow.destroy();
-        if (this.mathQuizQuestion) this.mathQuizQuestion.destroy();
+        // Smooth exit animation
+        const elementsToHide = [
+            this.mathQuizBg, 
+            this.mathQuizBgGlow, 
+            this.mathQuizQuestion,
+            this.mathQuizInstructions,
+            this.mathQuizTimerBar,
+            this.mathQuizTimerBg,
+            this.mathQuizFeedback
+        ];
+        
+        // Add choice elements
         if (this.mathQuizChoices) {
             this.mathQuizChoices.forEach(choice => {
-                choice.text.destroy();
-                choice.bg.destroy();
+                elementsToHide.push(choice.text, choice.bg);
             });
-            this.mathQuizChoices = [];
         }
-        if (this.mathQuizInstructions) this.mathQuizInstructions.destroy();
-        if (this.mathQuizTimerBar) this.mathQuizTimerBar.destroy();
-        if (this.mathQuizTimerBg) this.mathQuizTimerBg.destroy();
+        
+        // Filter out null/undefined elements
+        const validElements = elementsToHide.filter(element => element);
+        
+        if (validElements.length > 0) {
+            this.tweens.add({
+                targets: validElements,
+                alpha: 0,
+                scale: 0.8,
+                duration: 400,
+                ease: 'Power2.easeIn',
+                onComplete: () => {
+                    // Clean up elements
+                    validElements.forEach(element => {
+                        if (element && element.destroy) {
+                            element.destroy();
+                        }
+                    });
+                    
+                    // Reset references
+                    this.mathQuizBg = null;
+                    this.mathQuizBgGlow = null;
+                    this.mathQuizQuestion = null;
+                    this.mathQuizChoices = [];
+                    this.mathQuizInstructions = null;
+                    this.mathQuizTimerBar = null;
+                    this.mathQuizTimerBg = null;
+                    this.mathQuizFeedback = null;
+                }
+            });
+        }
     }
 
     // Visual effects
@@ -1719,18 +1944,49 @@ export class Week1MathScene extends Scene {
             
             this.mathQuizTimerBar.setDisplaySize(400 * timerPercent, 10);
             
-            // Timer color changes
-            if (timerPercent > 0.5) {
+            // Timer color changes with smooth transitions
+            if (timerPercent > 0.6) {
                 this.mathQuizTimerBar.setFillStyle(0x00ff00);
-            } else if (timerPercent > 0.2) {
+            } else if (timerPercent > 0.3) {
                 this.mathQuizTimerBar.setFillStyle(0xffff00);
+            } else if (timerPercent > 0.1) {
+                this.mathQuizTimerBar.setFillStyle(0xff8800);
             } else {
                 this.mathQuizTimerBar.setFillStyle(0xff0000);
+                // Add pulsing effect when time is very low
+                if (!this.timerPulseActive) {
+                    this.timerPulseActive = true;
+                    this.tweens.add({
+                        targets: this.mathQuizTimerBar,
+                        scaleY: 1.5,
+                        duration: 200,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Power2.easeInOut'
+                    });
+                }
             }
             
-            // Auto-timeout
-            if (remaining <= 0) {
-                this.hideMathQuizUI();
+            // Auto-timeout with grace period and smooth feedback
+            if (remaining <= 0 && !this.timeoutHandled) {
+                this.timeoutHandled = true;
+                this.timerPulseActive = false;
+                
+                // Show timeout feedback
+                this.showTimeoutFeedback();
+                
+                // Handle as incorrect answer
+                this.onMathAnswerIncorrect({
+                    timeSpent: this.mathQuizTimeLeft,
+                    difficulty: 'medium',
+                    powerLost: 10, // Reduced penalty for timeout
+                    reason: 'timeout'
+                });
+                
+                // Delay hiding UI to show timeout feedback
+                this.time.delayedCall(2000, () => {
+                    this.hideMathQuizUI();
+                });
             }
         }
     }

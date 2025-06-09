@@ -1,11 +1,21 @@
 import { Scene } from "phaser";
 import { QuestionManager, ProgressTracker } from "../utils/managers/index.js";
+import { CombatSystem } from "../utils/systems/CombatSystem.js";
 
 export class Week5CrossoverScene extends Scene {
     constructor() {
         super("Week5CrossoverScene");
         this.questionManager = new QuestionManager();
         this.progressTracker = new ProgressTracker();
+        
+        // Combat System Integration
+        this.combatSystem = null;
+        this.characterStats = null;
+        this.playerRobot = null;
+        this.enemyRobot = null;
+        this.combatUI = null;
+        this.enemyHealth = 150; // Higher health for crossover scene
+        this.maxEnemyHealth = 150;
         
         // Game state
         this.score = 0;
@@ -35,14 +45,24 @@ export class Week5CrossoverScene extends Scene {
         
         // Get equipped item effects
         this.equippedEffects = this.progressTracker.getEquippedEffects();
+        
+        // Initialize character stats for combat
+        this.characterStats = this.progressTracker.getCharacterStats();
+        console.log("Week5CrossoverScene: Character stats loaded:", this.characterStats);
     }
 
-    create() {
+    async create() {
+        // Initialize combat system first
+        await this.initializeCombatSystem();
+        
         // Create the fantasy world
         this.createFantasyWorld();
         
         // Create player character (hero/wizard)
         this.createPlayer();
+        
+        // Create combat robots
+        this.createCombatRobots();
         
         // Create magical realms
         this.createRealms();
@@ -53,7 +73,7 @@ export class Week5CrossoverScene extends Scene {
         // Create realm guardians
         this.createGuardians();
         
-        // Create UI
+        // Create UI (including combat UI)
         this.createUI();
         
         // Set up physics and interactions
@@ -62,8 +82,256 @@ export class Week5CrossoverScene extends Scene {
         // Create controls
         this.createControls();
         
+        // Set up combat event listeners
+        this.setupCombatEventListeners();
+        
         // Show welcome message
         this.showWelcomeMessage();
+    }
+
+    async initializeCombatSystem() {
+        try {
+            console.log("Week5CrossoverScene: Initializing combat system...");
+            this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+            await this.combatSystem.init();
+            console.log("Week5CrossoverScene: Combat system initialized successfully");
+        } catch (error) {
+            console.error("Week5CrossoverScene: Failed to initialize combat system:", error);
+            // Continue without combat system
+        }
+    }
+
+    setupCombatEventListeners() {
+        // Connect crossover challenge events to combat system
+        this.events.on('crossoverAnswerCorrect', (data) => {
+            if (this.combatSystem) {
+                const damage = this.combatSystem.onCorrectAnswer(data);
+                this.onCrossoverAnswerCorrect(data);
+            }
+        });
+
+        this.events.on('crossoverAnswerIncorrect', (data) => {
+            if (this.combatSystem) {
+                const penalty = this.combatSystem.onIncorrectAnswer(data);
+                this.onCrossoverAnswerIncorrect(data);
+            }
+        });
+    }
+
+    onCrossoverAnswerCorrect(data) {
+        // Calculate damage based on character stats (higher for crossover)
+        const baseDamage = 40;
+        const damage = Math.floor(baseDamage * this.characterStats.attackPower);
+        
+        // Perform robot attack animation
+        this.performPlayerAttack(damage);
+        
+        // Apply crossover-specific bonuses
+        const crossoverBonus = Math.floor(this.score * 0.2);
+        this.score += (20 + crossoverBonus);
+        
+        // Award experience with intelligence bonus (higher for crossover)
+        const baseXP = 25;
+        const xpGained = Math.floor(baseXP * (1 + this.characterStats.intelligence / 100));
+        this.progressTracker.addExperience(xpGained);
+        
+        // Award coins with luck bonus (higher for crossover)
+        const baseCoins = 12;
+        const coinsGained = Math.floor(baseCoins * (1 + this.characterStats.luck / 100));
+        this.progressTracker.addCoins(coinsGained, "Crossover Challenge Success");
+        
+        this.createFloatingText(this.scale.width / 2, 200, `+${xpGained} XP, +${coinsGained} Coins!`, '#00ff00');
+    }
+
+    onCrossoverAnswerIncorrect(data) {
+        // Calculate penalty reduced by defense (higher for crossover)
+        const basePenalty = 25;
+        const penalty = Math.max(8, basePenalty - this.characterStats.defense);
+        
+        // Perform enemy attack animation
+        this.performEnemyAttack(penalty);
+        
+        // Apply penalty to score
+        this.score = Math.max(0, this.score - penalty);
+        
+        this.createFloatingText(this.scale.width / 2, 200, `-${penalty} Score`, '#ff0000');
+    }
+
+    createCombatRobots() {
+        if (!this.combatSystem) return;
+        
+        try {
+            // Create player robot (positioned in central nexus)
+            this.playerRobot = this.combatSystem.createPlayerRobot();
+            if (this.playerRobot) {
+                this.playerRobot.setPosition(200, this.scale.height / 2);
+                this.playerRobot.setScale(0.7); // Slightly larger for epic crossover
+            }
+            
+            // Create enemy robot (positioned in opposite realm)
+            this.enemyRobot = this.combatSystem.createEnemyRobot();
+            if (this.enemyRobot) {
+                this.enemyRobot.setPosition(this.scale.width - 200, this.scale.height / 2);
+                this.enemyRobot.setScale(0.7); // Slightly larger for epic crossover
+            }
+            
+            // Create combat UI
+            this.combatUI = this.combatSystem.createCombatUI();
+            
+            console.log("Week5CrossoverScene: Combat robots created successfully");
+        } catch (error) {
+            console.error("Week5CrossoverScene: Error creating combat robots:", error);
+        }
+    }
+
+    performPlayerAttack(damage) {
+        if (!this.playerRobot || !this.enemyRobot) return;
+        
+        // Player robot attack animation
+        this.tweens.add({
+            targets: this.playerRobot,
+            scaleX: 0.8,
+            scaleY: 0.8,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Damage enemy
+        this.enemyHealth = Math.max(0, this.enemyHealth - damage);
+        
+        // Create attack effect
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#00ff00');
+        
+        // Create floating damage number
+        this.createFloatingDamageNumber(this.enemyRobot.x, this.enemyRobot.y - 30, damage, '#ffff00');
+        
+        // Update enemy health bar
+        this.updateEnemyHealthBar();
+        
+        // Check if enemy is defeated
+        if (this.enemyHealth <= 0) {
+            this.onEnemyDefeated();
+        }
+    }
+
+    performEnemyAttack(penalty) {
+        if (!this.enemyRobot || !this.playerRobot) return;
+        
+        // Enemy robot attack animation
+        this.tweens.add({
+            targets: this.enemyRobot,
+            scaleX: 0.8,
+            scaleY: 0.8,
+            duration: 150,
+            yoyo: true,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Create attack effect on player
+        this.createAttackEffect(this.playerRobot.x, this.playerRobot.y, '#ff0000');
+        
+        // Screen shake for impact
+        this.cameras.main.shake(200, 0.01);
+    }
+
+    createAttackEffect(x, y, color) {
+        const effect = this.add.circle(x, y, 35, Phaser.Display.Color.HexStringToColor(color).color, 0.7);
+        
+        this.tweens.add({
+            targets: effect,
+            scaleX: 2.5,
+            scaleY: 2.5,
+            alpha: 0,
+            duration: 400,
+            ease: 'Power2.easeOut',
+            onComplete: () => effect.destroy()
+        });
+    }
+
+    createFloatingDamageNumber(x, y, damage, color) {
+        const damageText = this.add.text(x, y, damage.toString(), {
+            fontSize: '22px',
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 3,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: damageText,
+            y: y - 50,
+            alpha: 0,
+            duration: 1200,
+            ease: 'Power2.easeOut',
+            onComplete: () => damageText.destroy()
+        });
+    }
+
+    onEnemyDefeated() {
+        // Victory effects
+        this.createAttackEffect(this.enemyRobot.x, this.enemyRobot.y, '#ffff00');
+        
+        // Bonus rewards for defeating enemy (higher for crossover)
+        const bonusXP = 80;
+        const bonusCoins = 40;
+        
+        this.progressTracker.addExperience(bonusXP);
+        this.progressTracker.addCoins(bonusCoins, "Crossover Combat Victory");
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 50, 
+            `ENEMY DEFEATED! +${bonusXP} XP, +${bonusCoins} Coins!`, '#ffff00');
+        
+        // Spawn new enemy after delay
+        this.time.delayedCall(3000, () => {
+            this.spawnNewEnemy();
+        });
+    }
+
+    spawnNewEnemy() {
+        // Reset enemy health
+        this.enemyHealth = this.maxEnemyHealth;
+        this.updateEnemyHealthBar();
+        
+        // Enemy spawn effect
+        if (this.enemyRobot) {
+            this.enemyRobot.setAlpha(0);
+            this.tweens.add({
+                targets: this.enemyRobot,
+                alpha: 1,
+                duration: 500,
+                ease: 'Power2.easeOut'
+            });
+        }
+        
+        this.createFloatingText(this.enemyRobot.x, this.enemyRobot.y - 30, 'NEW CHALLENGER!', '#ff00ff');
+    }
+
+    updateEnemyHealthBar() {
+        if (this.combatSystem && this.combatSystem.updateEnemyHealthBar) {
+            this.combatSystem.updateEnemyHealthBar();
+        }
+    }
+
+    createFloatingText(x, y, text, color = '#ffffff', fontSize = '16px') {
+        const floatingText = this.add.text(x, y, text, {
+            fontSize: fontSize,
+            fontFamily: 'Arial, sans-serif',
+            fill: color,
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: floatingText,
+            y: y - 60,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2.easeOut',
+            onComplete: () => floatingText.destroy()
+        });
     }
 
     createFantasyWorld() {
@@ -679,6 +947,15 @@ export class Week5CrossoverScene extends Scene {
         const isCorrect = this.questionManager.checkAnswer(selectedAnswer, this.currentQuestion.answer);
         
         if (isCorrect) {
+            // Trigger combat system event for correct answer
+            this.events.emit('crossoverAnswerCorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                isCorrect: true,
+                subject: this.currentGuardian.subject,
+                difficulty: 'hard'
+            });
+            
             // Award coins and experience
             const coinsEarned = this.progressTracker.calculateCoinReward('hard', 0);
             this.progressTracker.recordAnswer(this.currentGuardian.subject, true, 0, 'hard');
@@ -692,7 +969,8 @@ export class Week5CrossoverScene extends Scene {
                 this.showFeedback(`🎉 LEVEL UP! Now Level ${this.playerLevel}!`, 0xffd700);
             }
             
-            this.score += 150;
+            // Score is now handled by combat system, but add base score
+            this.score += 75; // Reduced since combat system adds more
             this.currentGuardian.defeated = true;
             this.questsCompleted[this.currentGuardian.subject] = true;
             
@@ -707,7 +985,7 @@ export class Week5CrossoverScene extends Scene {
             this.levelText.setText(`Level: ${this.playerLevel} | XP: ${this.experience}`);
             this.questText.setText(this.getQuestProgress());
             
-            this.showFeedback(`⚔️ Guardian Defeated! +150 points, +${coinsEarned} coins`, 0x10b981);
+            this.showFeedback(`🤖 Guardian Challenge! Robot Attack Activated!`, 0x10b981);
             this.showCoinCollection(coinsEarned, this.scale.width / 2, this.scale.height / 2 + 100);
             
             // Check if all guardians defeated
@@ -715,8 +993,18 @@ export class Week5CrossoverScene extends Scene {
                 this.unlockFinalBoss();
             }
         } else {
+            // Trigger combat system event for incorrect answer
+            this.events.emit('crossoverAnswerIncorrect', {
+                question: this.currentQuestion,
+                selectedAnswer: selectedAnswer,
+                correctAnswer: this.currentQuestion.answer,
+                isCorrect: false,
+                subject: this.currentGuardian.subject,
+                difficulty: 'hard'
+            });
+            
             this.progressTracker.recordAnswer(this.currentGuardian.subject, false);
-            this.showFeedback(`❌ Try again! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
+            this.showFeedback(`❌ Enemy Counter-Attack! Correct answer: ${this.currentQuestion.answer}`, 0xef4444);
         }
         
         // Close overlay
