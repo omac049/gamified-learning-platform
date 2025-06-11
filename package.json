@@ -6,10 +6,25 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.jsx",
+    "lint:fix": "eslint . --ext .js,.jsx --fix",
+    "lint:summary": "eslint . --ext .js,.jsx --format=compact",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky install"
   },
   "devDependencies": {
-    "vite": "^5.1.6"
+    "vite": "^5.1.6",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "prettier": "^3.2.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0"
   },
   "dependencies": {
     "phaser": "^3.90.0"
@@ -22,5 +37,14 @@
     "javascript"
   ],
   "author": "Learning Quest Academy",
-  "license": "MIT"
+  "license": "MIT",
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html}": [
+      "prettier --write"
+    ]
+  }
 }
