@@ -1,77 +1,77 @@
 /* Gamified Learning Platform Styles */
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #1a0033 0%, #4B0082 50%, #000080 100%);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #1a0033 0%, #4b0082 50%, #000080 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
 #app {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #phaser-container {
-    border: 3px solid #ffd700;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    background: #000000;
-    overflow: hidden;
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  background: #000000;
+  overflow: hidden;
 }
 
 /* Responsive design */
 @media (max-width: 1024px) {
-    #phaser-container {
-        border: 2px solid #ffd700;
-        border-radius: 8px;
-    }
+  #phaser-container {
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+  }
 }
 
 @media (max-width: 768px) {
-    #phaser-container {
-        border: 1px solid #ffd700;
-        border-radius: 5px;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-    }
+  #phaser-container {
+    border: 1px solid #ffd700;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  }
 }
 
 /* Loading animation */
 .loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: #ffd700;
-    font-size: 24px;
-    font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #ffd700;
+  font-size: 24px;
+  font-weight: bold;
 }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-    #phaser-container {
-        border-color: #ffffff;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-    }
-} 
+  #phaser-container {
+    border-color: #ffffff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+}

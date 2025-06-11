@@ -2,4 +2,4 @@
 export * from './managers/index.js';
 export * from './optimization/index.js';
 export * from './graphics/index.js';
-export * from './systems/index.js'; 
+export * from './systems/index.js';

@@ -3,6 +3,7 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
+    jest: true,
   },
   extends: ['airbnb-base', 'prettier'],
   plugins: ['prettier'],
@@ -23,6 +24,15 @@ module.exports = {
     // Prettier integration
     'prettier/prettier': 'error',
   },
+  overrides: [
+    {
+      files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
+      rules: {
+        'max-classes-per-file': 'off',
+        'import/no-unresolved': ['error', { ignore: ['jest-canvas-mock'] }],
+      },
+    },
+  ],
   settings: {
     'import/resolver': {
       alias: {

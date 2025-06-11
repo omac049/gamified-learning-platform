@@ -5,4 +5,4 @@ export { UIManager } from './UIManager.js';
 export { InputController } from './InputController.js';
 export { MathIntegrationSystem } from './MathIntegrationSystem.js';
 export { AudioSystem } from './AudioSystem.js';
-export { SystemLoader } from './SystemLoader.js'; 
+export { SystemLoader } from './SystemLoader.js';

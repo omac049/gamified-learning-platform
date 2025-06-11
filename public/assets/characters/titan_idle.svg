@@ -1,0 +1,59 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- TITAN - Heavy Assault Robot -->
+  <defs>
+    <linearGradient id="titanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#991b1b;stop-opacity:1" />
+    </linearGradient>
+    <filter id="redGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Massive Body -->
+  <rect x="18" y="22" width="28" height="32" rx="8" fill="url(#titanGradient)"/>
+  
+  <!-- Armor Plating -->
+  <rect x="20" y="24" width="24" height="28" rx="6" fill="#dc2626"/>
+  <rect x="22" y="26" width="20" height="24" rx="4" fill="#b91c1c"/>
+  
+  <!-- Power Core -->
+  <rect x="26" y="30" width="12" height="16" rx="3" fill="#450a0a"/>
+  <rect x="28" y="32" width="8" height="12" rx="2" fill="#ffa500"/>
+  <rect x="30" y="34" width="4" height="8" rx="1" fill="#ffff00" filter="url(#redGlow)"/>
+  
+  <!-- Heavy Head -->
+  <rect x="20" y="6" width="24" height="20" rx="10" fill="#374151"/>
+  
+  <!-- Battle Visor -->
+  <rect x="22" y="10" width="20" height="12" rx="5" fill="#450a0a"/>
+  <rect x="24" y="12" width="16" height="8" rx="3" fill="#ffa500" opacity="0.8"/>
+  
+  <!-- Intimidating Eyes -->
+  <circle cx="28" cy="16" r="3" fill="#ffff00" filter="url(#redGlow)"/>
+  <circle cx="36" cy="16" r="3" fill="#ffff00" filter="url(#redGlow)"/>
+  
+  <!-- Massive Arms -->
+  <rect x="8" y="20" width="12" height="20" rx="5" fill="url(#titanGradient)"/>
+  <rect x="44" y="20" width="12" height="20" rx="5" fill="url(#titanGradient)"/>
+  
+  <!-- Weapon Mounts -->
+  <rect x="10" y="22" width="8" height="16" rx="3" fill="#dc2626"/>
+  <rect x="46" y="22" width="8" height="16" rx="3" fill="#dc2626"/>
+  
+  <!-- Shoulder Cannons -->
+  <circle cx="14" cy="28" r="4" fill="#ffa500" filter="url(#redGlow)"/>
+  <circle cx="50" cy="28" r="4" fill="#ffa500" filter="url(#redGlow)"/>
+  
+  <!-- Heavy Legs -->
+  <rect x="20" y="52" width="10" height="10" rx="4" fill="url(#titanGradient)"/>
+  <rect x="34" y="52" width="10" height="10" rx="4" fill="url(#titanGradient)"/>
+  
+  <!-- Leg Armor -->
+  <rect x="22" y="54" width="6" height="6" rx="2" fill="#dc2626"/>
+  <rect x="36" y="54" width="6" height="6" rx="2" fill="#dc2626"/>
+</svg> 

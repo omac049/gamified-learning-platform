@@ -5,4 +5,4 @@ export { AchievementManager } from './AchievementManager.js';
 export { EventManager } from './EventManager.js';
 export { PowerUpManager } from './PowerUpManager.js';
 export { AdaptiveDifficultyManager } from './AdaptiveDifficultyManager.js';
-export { SaveManager } from './SaveManager.js'; 
+export { SaveManager } from './SaveManager.js';

@@ -7,12 +7,14 @@ This guide provides comprehensive information for developers working on the Gami
 ## 🚀 Development Setup
 
 ### Prerequisites
+
 - **Node.js**: v16 or higher
 - **npm**: v7 or higher (comes with Node.js)
 - **Git**: For version control
 - **Modern Browser**: Chrome, Firefox, Safari, or Edge
 
 ### Quick Start
+
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -28,6 +30,7 @@ npm run dev
 ```
 
 ### Available Scripts
+
 ```bash
 npm run dev      # Start Vite development server (port 5173)
 npm run build    # Build for production
@@ -37,6 +40,7 @@ npm run preview  # Preview production build locally
 ## 🏗️ Project Architecture
 
 ### Directory Structure
+
 ```
 gamified-learning-platform/
 ├── packages/
@@ -64,19 +68,23 @@ gamified-learning-platform/
 ### System Architecture
 
 #### **Core Systems**
+
 1. **GameSystem** (Base Class)
+
    - Event handling
    - Lifecycle management
    - Performance monitoring
    - Error handling
 
 2. **UIManager**
+
    - HUD management
    - Pause system
    - Visual feedback
    - Performance optimization
 
 3. **MathIntegrationSystem**
+
    - Question generation
    - Difficulty adaptation
    - Educational progression
@@ -89,6 +97,7 @@ gamified-learning-platform/
    - Multi-input support
 
 #### **Scene Management**
+
 - **Week1MathScene**: Main gameplay scene
 - **EducationalMenuScene**: Menu and navigation
 - **Scene Transitions**: Robust error handling and fallbacks
@@ -98,12 +107,14 @@ gamified-learning-platform/
 ### UIManager System
 
 #### **Key Features**
+
 - **Pause Overlay**: Professional pause menu with styled components
 - **HUD Elements**: Health, energy, shield, math power bars
 - **Visual Effects**: Particle systems, screen flashes, floating text
 - **Performance**: Object pooling and update throttling
 
 #### **Implementation Details**
+
 ```javascript
 // UIManager initialization
 async onInit() {
@@ -124,6 +135,7 @@ createPauseOverlay() {
 ```
 
 #### **Event System**
+
 ```javascript
 // UI events
 this.on('playerHealthChanged', this.updateHealthBar);
@@ -135,36 +147,39 @@ this.on('gameResume', this.resumeGame);
 ### MathIntegrationSystem
 
 #### **Contextual Triggers**
+
 ```javascript
 mathTriggers = {
-    enemyEncounter: { chance: 0.3, cooldown: 5000 },
-    lowHealth: { threshold: 0.3, cooldown: 10000 },
-    bossEncounter: { chance: 0.8, cooldown: 0 },
-    powerUpRequest: { chance: 1.0, cooldown: 2000 }
-}
+  enemyEncounter: { chance: 0.3, cooldown: 5000 },
+  lowHealth: { threshold: 0.3, cooldown: 10000 },
+  bossEncounter: { chance: 0.8, cooldown: 0 },
+  powerUpRequest: { chance: 1.0, cooldown: 2000 },
+};
 ```
 
 #### **Question Generation**
+
 ```javascript
 // Progressive difficulty levels
 questionTemplates = {
-    addition: {
-        level1: () => this.generateBasicAddition(1, 10),
-        level2: () => this.generateBasicAddition(10, 50),
-        level3: () => this.generateBasicAddition(50, 100),
-        level4: () => this.generateMultiDigitAddition(),
-        level5: () => this.generateWordProblemAddition()
-    }
-    // ... other topics
-}
+  addition: {
+    level1: () => this.generateBasicAddition(1, 10),
+    level2: () => this.generateBasicAddition(10, 50),
+    level3: () => this.generateBasicAddition(50, 100),
+    level4: () => this.generateMultiDigitAddition(),
+    level5: () => this.generateWordProblemAddition(),
+  },
+  // ... other topics
+};
 ```
 
 #### **Adaptive Difficulty**
+
 ```javascript
 adjustDifficulty() {
     const recentPerformance = this.performanceHistory.slice(-5);
     const accuracy = recentPerformance.filter(p => p.correct).length / recentPerformance.length;
-    
+
     if (accuracy >= 0.8 && avgResponseTime < this.questionTimeLimit * 0.6) {
         this.increaseDifficulty();
     } else if (accuracy <= 0.4 || avgResponseTime > this.questionTimeLimit * 0.9) {
@@ -176,6 +191,7 @@ adjustDifficulty() {
 ### InputController System
 
 #### **Key Binding Management**
+
 ```javascript
 setupKeyBindings() {
     // Movement keys
@@ -183,12 +199,12 @@ setupKeyBindings() {
     this.bindKey('A', 'moveLeft');
     this.bindKey('S', 'moveDown');
     this.bindKey('D', 'moveRight');
-    
+
     // Action keys
     this.bindKey('SPACE', 'shoot');
     this.bindKey('ESC', 'pause');
     this.bindKey('P', 'pause');
-    
+
     // Math answer keys
     this.bindKey('ONE', 'answer1');
     this.bindKey('TWO', 'answer2');
@@ -200,30 +216,33 @@ setupKeyBindings() {
 ## 🎨 Visual System Guidelines
 
 ### **UI Design Principles**
+
 1. **High Contrast**: Ensure readability across all elements
 2. **Color Coding**: Consistent color schemes for different states
 3. **Visual Hierarchy**: Clear information prioritization
 4. **Responsive Design**: Adaptable to different screen sizes
 
 ### **Animation Standards**
+
 ```javascript
 // Standard animation durations
 const ANIMATION_DURATIONS = {
-    fast: 150,      // Button hover, quick feedback
-    medium: 300,    // UI transitions, moderate effects
-    slow: 600,      // Scene transitions, major effects
-    extended: 1200  // Celebration effects, major achievements
+  fast: 150, // Button hover, quick feedback
+  medium: 300, // UI transitions, moderate effects
+  slow: 600, // Scene transitions, major effects
+  extended: 1200, // Celebration effects, major achievements
 };
 
 // Easing functions
 const EASING = {
-    smooth: 'Power2',
-    bounce: 'Back.easeOut',
-    elastic: 'Elastic.easeOut'
+  smooth: 'Power2',
+  bounce: 'Back.easeOut',
+  elastic: 'Elastic.easeOut',
 };
 ```
 
 ### **Particle System Guidelines**
+
 ```javascript
 // Particle effect standards
 createParticleEffect(type, x, y, config = {}) {
@@ -233,7 +252,7 @@ createParticleEffect(type, x, y, config = {}) {
         hit: { color: 0xffff00, count: 8, duration: 600 },
         explosion: { color: 0xff4444, count: 15, duration: 1000 }
     };
-    
+
     const effect = { ...effects[type], ...config };
     this.generateParticles(x, y, effect);
 }
@@ -242,12 +261,14 @@ createParticleEffect(type, x, y, config = {}) {
 ## 🧮 Educational System Guidelines
 
 ### **Question Design Principles**
+
 1. **Contextual Relevance**: Questions should relate to game situations
 2. **Progressive Difficulty**: Gradual increase in complexity
 3. **Immediate Feedback**: Clear consequences for answers
 4. **Variety**: Mix of problem types and formats
 
 ### **Difficulty Progression**
+
 ```javascript
 // Topic mastery tracking
 topicProgression = {
@@ -261,7 +282,7 @@ topicProgression = {
 updateTopicMastery(topic, isCorrect) {
     const adjustment = isCorrect ? 0.1 : -0.05;
     this.topicProgression[topic].mastery = Math.max(0, Math.min(1, current + adjustment));
-    
+
     // Level advancement at 90% mastery
     if (this.topicProgression[topic].mastery >= 0.9) {
         this.topicProgression[topic].level++;
@@ -270,15 +291,16 @@ updateTopicMastery(topic, isCorrect) {
 ```
 
 ### **Performance Analytics**
+
 ```javascript
 // Tracked metrics
 performanceMetrics = {
-    questionsAnswered: 0,
-    correctAnswers: 0,
-    averageResponseTime: 0,
-    streakRecord: 0,
-    topicAccuracy: {},
-    difficultyProgression: []
+  questionsAnswered: 0,
+  correctAnswers: 0,
+  averageResponseTime: 0,
+  streakRecord: 0,
+  topicAccuracy: {},
+  difficultyProgression: [],
 };
 ```
 
@@ -287,6 +309,7 @@ performanceMetrics = {
 ### **Code Style Guidelines**
 
 #### **Naming Conventions**
+
 ```javascript
 // Classes: PascalCase
 class MathIntegrationSystem extends GameSystem {}
@@ -302,6 +325,7 @@ _updateInternalState() {}
 ```
 
 #### **Error Handling**
+
 ```javascript
 // Always use try-catch for system operations
 async initializeSystem() {
@@ -322,6 +346,7 @@ initializeFallbackSystem() {
 ```
 
 #### **Event System Usage**
+
 ```javascript
 // Event naming: descriptive and consistent
 this.emit('mathAnswerCorrect', { streak, mathPower, effects });
@@ -343,65 +368,68 @@ cleanup() {
 ### **Performance Guidelines**
 
 #### **Object Pooling**
+
 ```javascript
 // Pool management for frequently created objects
 class ObjectPool {
-    constructor(createFn, resetFn, initialSize = 10) {
-        this.createFn = createFn;
-        this.resetFn = resetFn;
-        this.pool = [];
-        this.active = [];
-        
-        // Pre-populate pool
-        for (let i = 0; i < initialSize; i++) {
-            this.pool.push(this.createFn());
-        }
+  constructor(createFn, resetFn, initialSize = 10) {
+    this.createFn = createFn;
+    this.resetFn = resetFn;
+    this.pool = [];
+    this.active = [];
+
+    // Pre-populate pool
+    for (let i = 0; i < initialSize; i++) {
+      this.pool.push(this.createFn());
     }
-    
-    acquire() {
-        const obj = this.pool.pop() || this.createFn();
-        this.active.push(obj);
-        return obj;
+  }
+
+  acquire() {
+    const obj = this.pool.pop() || this.createFn();
+    this.active.push(obj);
+    return obj;
+  }
+
+  release(obj) {
+    const index = this.active.indexOf(obj);
+    if (index !== -1) {
+      this.active.splice(index, 1);
+      this.resetFn(obj);
+      this.pool.push(obj);
     }
-    
-    release(obj) {
-        const index = this.active.indexOf(obj);
-        if (index !== -1) {
-            this.active.splice(index, 1);
-            this.resetFn(obj);
-            this.pool.push(obj);
-        }
-    }
+  }
 }
 ```
 
 #### **Update Optimization**
+
 ```javascript
 // Throttled updates for performance
 class ThrottledUpdater {
-    constructor(updateFn, throttleMs = 16) {
-        this.updateFn = updateFn;
-        this.throttleMs = throttleMs;
-        this.lastUpdate = 0;
-        this.pendingUpdate = false;
+  constructor(updateFn, throttleMs = 16) {
+    this.updateFn = updateFn;
+    this.throttleMs = throttleMs;
+    this.lastUpdate = 0;
+    this.pendingUpdate = false;
+  }
+
+  requestUpdate(time) {
+    if (time - this.lastUpdate >= this.throttleMs) {
+      this.updateFn(time);
+      this.lastUpdate = time;
+      this.pendingUpdate = false;
+    } else if (!this.pendingUpdate) {
+      this.pendingUpdate = true;
+      setTimeout(() => this.requestUpdate(Date.now()), this.throttleMs);
     }
-    
-    requestUpdate(time) {
-        if (time - this.lastUpdate >= this.throttleMs) {
-            this.updateFn(time);
-            this.lastUpdate = time;
-            this.pendingUpdate = false;
-        } else if (!this.pendingUpdate) {
-            this.pendingUpdate = true;
-            setTimeout(() => this.requestUpdate(Date.now()), this.throttleMs);
-        }
-    }
+  }
 }
 ```
 
 ### **Testing Guidelines**
 
 #### **Manual Testing Checklist**
+
 - [ ] **Pause System**: ESC/P keys work in all game states
 - [ ] **Math Integration**: All trigger types function correctly
 - [ ] **Visual Effects**: Particles and animations display properly
@@ -411,6 +439,7 @@ class ThrottledUpdater {
 - [ ] **Responsive Design**: UI scales properly on different screen sizes
 
 #### **Browser Compatibility**
+
 - [ ] **Chrome**: Latest version
 - [ ] **Firefox**: Latest version
 - [ ] **Safari**: Latest version
@@ -419,6 +448,7 @@ class ThrottledUpdater {
 ## 🚀 Deployment Guidelines
 
 ### **Production Build**
+
 ```bash
 # Build for production
 npm run build
@@ -431,22 +461,24 @@ npm run preview
 ```
 
 ### **Environment Configuration**
+
 ```javascript
 // vite.config.js
 export default {
-    base: './',  // For relative paths
-    build: {
-        outDir: 'dist',
-        assetsDir: 'assets',
-        sourcemap: false,  // Disable for production
-        minify: 'terser'
-    }
+  base: './', // For relative paths
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false, // Disable for production
+    minify: 'terser',
+  },
 };
 ```
 
 ## 🤝 Contributing Guidelines
 
 ### **Pull Request Process**
+
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
 3. **Implement** your changes with proper testing
@@ -457,6 +489,7 @@ export default {
 8. **Open** a Pull Request with detailed description
 
 ### **Commit Message Format**
+
 ```
 type(scope): description
 
@@ -467,6 +500,7 @@ perf(particles): optimize object pooling
 ```
 
 ### **Code Review Checklist**
+
 - [ ] **Functionality**: Code works as intended
 - [ ] **Performance**: No performance regressions
 - [ ] **Documentation**: Code is well-documented
@@ -477,50 +511,54 @@ perf(particles): optimize object pooling
 ## 📊 Monitoring & Analytics
 
 ### **Performance Monitoring**
+
 ```javascript
 // Performance metrics tracking
 const performanceMonitor = {
-    frameRate: 0,
-    memoryUsage: 0,
-    systemLoad: {},
-    
-    track() {
-        this.frameRate = this.scene.game.loop.actualFps;
-        this.memoryUsage = performance.memory?.usedJSHeapSize || 0;
-        this.systemLoad = this.getSystemLoad();
-    }
+  frameRate: 0,
+  memoryUsage: 0,
+  systemLoad: {},
+
+  track() {
+    this.frameRate = this.scene.game.loop.actualFps;
+    this.memoryUsage = performance.memory?.usedJSHeapSize || 0;
+    this.systemLoad = this.getSystemLoad();
+  },
 };
 ```
 
 ### **Educational Analytics**
+
 ```javascript
 // Learning progress tracking
 const learningAnalytics = {
-    sessionData: {
-        startTime: Date.now(),
-        questionsAnswered: 0,
-        accuracy: 0,
-        topicProgress: {},
-        engagementMetrics: {}
-    },
-    
-    trackProgress(questionData, responseData) {
-        // Track learning metrics
-        // Analyze performance patterns
-        // Adjust difficulty accordingly
-    }
+  sessionData: {
+    startTime: Date.now(),
+    questionsAnswered: 0,
+    accuracy: 0,
+    topicProgress: {},
+    engagementMetrics: {},
+  },
+
+  trackProgress(questionData, responseData) {
+    // Track learning metrics
+    // Analyze performance patterns
+    // Adjust difficulty accordingly
+  },
 };
 ```
 
 ## 🔮 Future Development
 
 ### **Planned Enhancements**
+
 - **Multiplayer Support**: Real-time collaborative gameplay
 - **Advanced Analytics**: Machine learning-based difficulty adjustment
 - **Mobile Support**: Touch controls and responsive design
 - **Teacher Dashboard**: Progress monitoring and curriculum control
 
 ### **Technical Debt**
+
 - **Test Coverage**: Implement automated testing
 - **Type Safety**: Consider TypeScript migration
 - **Bundle Optimization**: Further reduce bundle size
@@ -528,4 +566,4 @@ const learningAnalytics = {
 
 ---
 
-This development guide provides the foundation for contributing to and extending the Gamified Learning Platform. For questions or clarifications, please refer to the project documentation or open an issue on GitHub. 
+This development guide provides the foundation for contributing to and extending the Gamified Learning Platform. For questions or clarifications, please refer to the project documentation or open an issue on GitHub.

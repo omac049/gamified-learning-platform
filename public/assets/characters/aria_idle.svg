@@ -1,0 +1,47 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- ARIA - Cyber Intelligence Robot -->
+  <defs>
+    <linearGradient id="ariaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Body -->
+  <rect x="20" y="24" width="24" height="28" rx="6" fill="url(#ariaGradient)"/>
+  
+  <!-- Chest Core -->
+  <rect x="26" y="30" width="12" height="16" rx="3" fill="#1e40af"/>
+  <rect x="28" y="32" width="8" height="12" rx="2" fill="#60a5fa"/>
+  <rect x="30" y="34" width="4" height="8" rx="1" fill="#00ffff" filter="url(#glow)"/>
+  
+  <!-- Head -->
+  <rect x="22" y="8" width="20" height="18" rx="8" fill="#e5e7eb"/>
+  
+  <!-- Visor -->
+  <rect x="24" y="12" width="16" height="10" rx="4" fill="#1e40af"/>
+  <rect x="25" y="13" width="14" height="8" rx="3" fill="#00ffff" opacity="0.7"/>
+  
+  <!-- Eyes -->
+  <circle cx="28" cy="17" r="2" fill="#60a5fa" filter="url(#glow)"/>
+  <circle cx="36" cy="17" r="2" fill="#60a5fa" filter="url(#glow)"/>
+  
+  <!-- Arms -->
+  <rect x="12" y="22" width="10" height="16" rx="4" fill="url(#ariaGradient)"/>
+  <rect x="42" y="22" width="10" height="16" rx="4" fill="url(#ariaGradient)"/>
+  
+  <!-- Shoulder Cores -->
+  <circle cx="17" cy="28" r="3" fill="#00ffff" filter="url(#glow)"/>
+  <circle cx="47" cy="28" r="3" fill="#00ffff" filter="url(#glow)"/>
+  
+  <!-- Legs -->
+  <rect x="22" y="50" width="8" height="12" rx="3" fill="url(#ariaGradient)"/>
+  <rect x="34" y="50" width="8" height="12" rx="3" fill="url(#ariaGradient)"/>
+</svg> 

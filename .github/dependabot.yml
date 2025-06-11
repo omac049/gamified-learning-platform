@@ -1,0 +1,66 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 10
+    reviewers:
+      - 'ocorral'
+    assignees:
+      - 'ocorral'
+    commit-message:
+      prefix: 'chore'
+      prefix-development: 'chore'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'automated'
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: 'phaser'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'vite'
+        update-types: ['version-update:semver-major']
+    groups:
+      # Group ESLint related updates
+      eslint:
+        patterns:
+          - 'eslint*'
+          - '@typescript-eslint/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group testing related updates
+      testing:
+        patterns:
+          - 'jest*'
+          - '@jest/*'
+          - 'playwright*'
+          - '@playwright/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group development dependencies
+      dev-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+    labels:
+      - 'github-actions'
+      - 'automated'

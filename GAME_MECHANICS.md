@@ -7,6 +7,7 @@ This document provides detailed technical information about the Universal Combat
 ## ⚔️ Universal Combat System
 
 ### 1. **Core Combat Loop**
+
 - **Answer Selection**: Player chooses answers to educational questions
 - **Combat Resolution**: Correct answers trigger player robot attacks, incorrect answers trigger enemy attacks
 - **Stat Integration**: Character stats (attack, defense, speed, accuracy, luck, intelligence) affect all combat
@@ -14,6 +15,7 @@ This document provides detailed technical information about the Universal Combat
 - **Progression**: XP and coin rewards based on performance with character bonuses
 
 ### 2. **Character System**
+
 - **Three Unique Characters**: ARIA (Stealth), TITAN (Tank), NEXUS (Tech)
 - **Level Progression**: Each level increases all combat stats
 - **Stat Scaling**: Base stats + level bonuses + equipment effects
@@ -22,9 +24,10 @@ This document provides detailed technical information about the Universal Combat
 ### 3. **Equipment Integration**
 
 #### **Weapon Effects**
+
 ```javascript
 Plasma Sword: +25% attack power
-Neural Disruptor: +50% attack power  
+Neural Disruptor: +50% attack power
 Quantum Cannon: +100% attack power
 
 Combat Impact:
@@ -34,6 +37,7 @@ Combat Impact:
 ```
 
 #### **Shield Effects**
+
 ```javascript
 Energy Barrier: +25 defense
 Adaptive Armor: +35 defense
@@ -46,6 +50,7 @@ Combat Impact:
 ```
 
 #### **Tech Effects**
+
 ```javascript
 Hint Scanner: +25% accuracy
 Time Dilator: +15 second bonus
@@ -58,6 +63,7 @@ Combat Impact:
 ```
 
 #### **Core Effects**
+
 ```javascript
 XP Amplifier: +50% intelligence
 Coin Magnet: +100% luck
@@ -72,6 +78,7 @@ Combat Impact:
 ## 🎯 Subject-Specific Combat Integration
 
 ### **Week 1: Math Combat Arena**
+
 ```javascript
 Combat Mechanics:
 - Calculation-based damage scaling
@@ -93,6 +100,7 @@ Visual Elements:
 ```
 
 ### **Week 2: Reading Combat Arena**
+
 ```javascript
 Combat Mechanics:
 - Comprehension-based accuracy bonuses
@@ -114,6 +122,7 @@ Visual Elements:
 ```
 
 ### **Week 3: Science Combat Lab** (Combat-Ready Framework)
+
 ```javascript
 Combat Mechanics:
 - Experimental accuracy bonuses
@@ -137,6 +146,7 @@ Planned Visual Elements:
 ## 🤖 Character Stat System
 
 ### **Base Stat Calculations**
+
 ```javascript
 // Level scaling formula
 baseStats = {
@@ -156,6 +166,7 @@ NEXUS: +20% intelligence, +10% accuracy, +10% luck
 ```
 
 ### **Equipment Stat Bonuses**
+
 ```javascript
 // Applied after base stats calculation
 applyEquipmentStatsBonus(stats) {
@@ -170,6 +181,7 @@ applyEquipmentStatsBonus(stats) {
 ## ⚡ Combat Resolution System
 
 ### **Correct Answer Flow**
+
 ```javascript
 1. Player selects correct answer
 2. Calculate damage: baseDamage × characterStats.attackPower
@@ -184,6 +196,7 @@ applyEquipmentStatsBonus(stats) {
 ```
 
 ### **Incorrect Answer Flow**
+
 ```javascript
 1. Player selects incorrect answer
 2. Calculate penalty: basePenalty - characterStats.defense
@@ -197,6 +210,7 @@ applyEquipmentStatsBonus(stats) {
 ```
 
 ### **Damage Calculation Examples**
+
 ```javascript
 // Math Combat Example
 baseDamage = 25
@@ -204,7 +218,7 @@ characterAttack = 1.2 (Level 5 TITAN)
 weaponBonus = 1.5 (Neural Disruptor)
 finalDamage = 25 × 1.2 × 1.5 = 45 damage
 
-// Reading Combat Example  
+// Reading Combat Example
 baseDamage = 25
 characterAttack = 1.1 (Level 3 ARIA)
 accuracyBonus = 1.25 (Answer Analyzer)
@@ -214,6 +228,7 @@ finalDamage = 25 × 1.1 × 1.25 = 34 damage
 ## 🎮 Visual Combat System
 
 ### **Robot Graphics System**
+
 ```javascript
 // Character-specific robot designs
 createRobotGraphic(charType) {
@@ -226,11 +241,12 @@ createRobotGraphic(charType) {
 
 // Robot specifications by character
 ARIA: Sleek, angular, stealth-focused design
-TITAN: Bulky, armored, heavy assault design  
+TITAN: Bulky, armored, heavy assault design
 NEXUS: Modular, crystalline, tech-focused design
 ```
 
 ### **Combat Animations**
+
 ```javascript
 // Player attack sequence
 performPlayerAttack(damage) {
@@ -254,6 +270,7 @@ performEnemyAttack(penalty) {
 ```
 
 ### **Visual Effects System**
+
 ```javascript
 // Attack effects
 createAttackEffect(x, y, color) {
@@ -281,6 +298,7 @@ applyEquipmentVisuals(robot, equippedItems) {
 ## 📊 Progression Integration
 
 ### **Experience System**
+
 ```javascript
 // Base XP with intelligence multiplier
 addExperience(baseAmount) {
@@ -292,11 +310,12 @@ addExperience(baseAmount) {
 
 // Subject-specific XP bonuses
 Math: Base 15 XP per correct answer
-Reading: Base 15 XP per correct answer  
+Reading: Base 15 XP per correct answer
 Science: Base 20 XP per correct answer (planned)
 ```
 
 ### **Coin System**
+
 ```javascript
 // Base coins with luck multiplier
 addCoins(baseAmount, reason) {
@@ -313,6 +332,7 @@ Bonus: Equipment effects can double rewards
 ```
 
 ### **Streak System**
+
 ```javascript
 // Streak tracking with protection
 onCorrectAnswer() {
@@ -334,39 +354,42 @@ onIncorrectAnswer() {
 ## 🔧 Technical Implementation
 
 ### **Event-Driven Architecture**
+
 ```javascript
 // Subject scenes emit events
 this.events.emit('subjectAnswerCorrect', {
-    subject: 'math',
-    difficulty: 'medium',
-    timeSpent: 3000
+  subject: 'math',
+  difficulty: 'medium',
+  timeSpent: 3000,
 });
 
 // Combat system responds to events
-this.events.on('subjectAnswerCorrect', (data) => {
-    damage = this.combatSystem.onCorrectAnswer(data);
-    // Handle combat resolution
+this.events.on('subjectAnswerCorrect', data => {
+  damage = this.combatSystem.onCorrectAnswer(data);
+  // Handle combat resolution
 });
 ```
 
 ### **Modular Integration**
+
 ```javascript
 // Any scene can integrate combat
 class WeekXScene extends Scene {
-    create() {
-        this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
-        this.combatSystem.init();
-        this.setupCombatEventListeners();
-    }
-    
-    setupCombatEventListeners() {
-        this.events.on('subjectAnswerCorrect', this.onCorrectAnswer);
-        this.events.on('subjectAnswerIncorrect', this.onIncorrectAnswer);
-    }
+  create() {
+    this.combatSystem = new CombatSystem(this, {}, this.progressTracker);
+    this.combatSystem.init();
+    this.setupCombatEventListeners();
+  }
+
+  setupCombatEventListeners() {
+    this.events.on('subjectAnswerCorrect', this.onCorrectAnswer);
+    this.events.on('subjectAnswerIncorrect', this.onIncorrectAnswer);
+  }
 }
 ```
 
 ### **Performance Optimizations**
+
 ```javascript
 // Reusable combat system across subjects
 // Efficient robot graphics with containers
@@ -378,18 +401,21 @@ class WeekXScene extends Scene {
 ## 🌟 Future Enhancements
 
 ### **Phase 2: Advanced Combat**
+
 - Special abilities per character type
 - Boss battles with unique mechanics
 - Weapon-specific attack animations
 - Combo system for answer streaks
 
 ### **Phase 3: Multiplayer Combat**
+
 - Robot vs Robot PvP battles
 - Team-based combat scenarios
 - Tournament mode with rankings
 - Guild system integration
 
 ### **Phase 4: Advanced Progression**
+
 - Prestige system for max-level characters
 - Legendary equipment tiers
 - Achievement-based unlocks
@@ -397,4 +423,4 @@ class WeekXScene extends Scene {
 
 ---
 
-**The Universal Combat System transforms every educational interaction into an epic battle, making learning an adventure where knowledge is power!** ⚔️🤖✨ 
+**The Universal Combat System transforms every educational interaction into an epic battle, making learning an adventure where knowledge is power!** ⚔️🤖✨

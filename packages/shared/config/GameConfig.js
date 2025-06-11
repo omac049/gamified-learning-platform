@@ -8,7 +8,7 @@ export const GameConfig = {
   arena: {
     width: 800,
     height: 600,
-    centerOffset: { x: 112, y: 84 } // (1024-800)/2, (768-600)/2
+    centerOffset: { x: 112, y: 84 }, // (1024-800)/2, (768-600)/2
   },
 
   // === TIMING & PHASES ===
@@ -18,7 +18,7 @@ export const GameConfig = {
     waveDuration: 30, // seconds per wave
     mathQuizDuration: 15, // seconds for math quiz between waves
     comboDecayTime: 3000, // milliseconds
-    weaponSwitchCooldown: 500 // milliseconds
+    weaponSwitchCooldown: 500, // milliseconds
   },
 
   // === DIFFICULTY SCALING ===
@@ -26,15 +26,20 @@ export const GameConfig = {
     base: 1.0,
     maxDifficulty: 3.0,
     increasePerWave: 0.2,
-    
+
     // Scaling formulas (applied as functions)
     scaling: {
-      spawnInterval: (baseInterval, difficulty) => baseInterval / Math.pow(difficulty, 0.8),
-      enemyHealth: (baseHealth, difficulty) => Math.floor(baseHealth * Math.pow(difficulty, 1.2)),
-      enemySpeed: (baseSpeed, difficulty) => baseSpeed * (1 + (difficulty - 1) * 0.3),
-      enemyDamage: (baseDamage, difficulty) => Math.floor(baseDamage * Math.pow(difficulty, 1.1)),
-      spawnCount: (baseCount, difficulty) => Math.min(8, Math.floor(baseCount * difficulty))
-    }
+      spawnInterval: (baseInterval, difficulty) =>
+        baseInterval / difficulty ** 0.8,
+      enemyHealth: (baseHealth, difficulty) =>
+        Math.floor(baseHealth * difficulty ** 1.2),
+      enemySpeed: (baseSpeed, difficulty) =>
+        baseSpeed * (1 + (difficulty - 1) * 0.3),
+      enemyDamage: (baseDamage, difficulty) =>
+        Math.floor(baseDamage * difficulty ** 1.1),
+      spawnCount: (baseCount, difficulty) =>
+        Math.min(8, Math.floor(baseCount * difficulty)),
+    },
   },
 
   // === ENEMY CONFIGURATIONS ===
@@ -49,7 +54,7 @@ export const GameConfig = {
       spawnWeight: 0.5, // Higher = more common
       aiType: 'hit_and_run',
       size: { width: 30, height: 30 },
-      color: 0xff4444
+      color: 0xff4444,
     },
     warrior: {
       baseHealth: 100,
@@ -61,7 +66,7 @@ export const GameConfig = {
       spawnWeight: 0.3,
       aiType: 'direct_assault',
       size: { width: 35, height: 35 },
-      color: 0xff6600
+      color: 0xff6600,
     },
     destroyer: {
       baseHealth: 150,
@@ -73,8 +78,8 @@ export const GameConfig = {
       spawnWeight: 0.2,
       aiType: 'long_range',
       size: { width: 40, height: 40 },
-      color: 0xff0000
-    }
+      color: 0xff0000,
+    },
   },
 
   // === WEAPON CONFIGURATIONS ===
@@ -87,7 +92,7 @@ export const GameConfig = {
       energyCost: 5,
       accuracy: 0.95,
       icon: '🔫',
-      color: 0x00ff88
+      color: 0x00ff88,
     },
     heavyCannon: {
       damage: 60,
@@ -98,7 +103,7 @@ export const GameConfig = {
       accuracy: 0.85,
       icon: '💥',
       color: 0xff6600,
-      areaOfEffect: 50
+      areaOfEffect: 50,
     },
     laser: {
       damage: 35,
@@ -109,7 +114,7 @@ export const GameConfig = {
       accuracy: 1.0,
       icon: '⚡',
       color: 0x00ffff,
-      piercing: true
+      piercing: true,
     },
     spreadShot: {
       damage: 15,
@@ -121,8 +126,8 @@ export const GameConfig = {
       icon: '🌟',
       color: 0xffff00,
       projectileCount: 3,
-      spread: 30 // degrees
-    }
+      spread: 30, // degrees
+    },
   },
 
   // === SPECIAL ABILITIES ===
@@ -134,7 +139,7 @@ export const GameConfig = {
       energyCost: 30,
       effect: { timeScale: 0.3 },
       icon: '⏰',
-      color: 0x9966ff
+      color: 0x9966ff,
     },
     shieldBoost: {
       name: 'Energy Shield',
@@ -143,7 +148,7 @@ export const GameConfig = {
       energyCost: 25,
       effect: { shieldAmount: 50 },
       icon: '🛡️',
-      color: 0x4444ff
+      color: 0x4444ff,
     },
     damageBoost: {
       name: 'Weapon Overcharge',
@@ -152,7 +157,7 @@ export const GameConfig = {
       energyCost: 20,
       effect: { damageMultiplier: 2.0 },
       icon: '⚔️',
-      color: 0xff4444
+      color: 0xff4444,
     },
     rapidFire: {
       name: 'Rapid Fire Mode',
@@ -161,7 +166,7 @@ export const GameConfig = {
       energyCost: 15,
       effect: { fireRateMultiplier: 3.0 },
       icon: '🔥',
-      color: 0xff8800
+      color: 0xff8800,
     },
     areaAttack: {
       name: 'Plasma Burst',
@@ -170,8 +175,8 @@ export const GameConfig = {
       energyCost: 40,
       effect: { areaRadius: 200, areaDamage: 100 },
       icon: '💫',
-      color: 0x00ff00
-    }
+      color: 0x00ff00,
+    },
   },
 
   // === PLAYER CONFIGURATION ===
@@ -184,7 +189,7 @@ export const GameConfig = {
     shieldRegenDelay: 3000, // milliseconds after last damage
     size: { width: 40, height: 40 },
     speed: 200,
-    color: 0x00aaff
+    color: 0x00aaff,
   },
 
   // === MATH INTEGRATION ===
@@ -195,9 +200,9 @@ export const GameConfig = {
       correctAnswerValue: 20,
       incorrectAnswerPenalty: -10,
       abilityUnlockThreshold: 80,
-      comboBoostThreshold: 60
+      comboBoostThreshold: 60,
     },
-    
+
     // Quiz configuration
     quiz: {
       questionsPerWave: 3,
@@ -207,8 +212,8 @@ export const GameConfig = {
         perfect: 2.0,
         good: 1.5,
         average: 1.0,
-        poor: 0.5
-      }
+        poor: 0.5,
+      },
     },
 
     // Rewards for math performance
@@ -216,15 +221,15 @@ export const GameConfig = {
       correctAnswer: {
         energyRestore: 20,
         shieldBoost: 10,
-        scoreMultiplier: 1.2
+        scoreMultiplier: 1.2,
       },
       perfectWave: {
         energyRestore: 50,
         shieldBoost: 25,
         specialAbilityCharge: 50,
-        scoreMultiplier: 2.0
-      }
-    }
+        scoreMultiplier: 2.0,
+      },
+    },
   },
 
   // === VISUAL EFFECTS ===
@@ -236,34 +241,34 @@ export const GameConfig = {
         normal: '#ffffff',
         critical: '#ff0000',
         heal: '#00ff00',
-        shield: '#4444ff'
+        shield: '#4444ff',
       },
       animation: {
         duration: 1500,
         riseDistance: 50,
-        fadeDelay: 500
-      }
+        fadeDelay: 500,
+      },
     },
-    
+
     camera: {
       shakeIntensity: {
         light: 0.005,
         medium: 0.01,
-        heavy: 0.02
+        heavy: 0.02,
       },
       shakeDuration: {
         light: 100,
         medium: 200,
-        heavy: 400
+        heavy: 400,
       },
-      flashDuration: 200
+      flashDuration: 200,
     },
 
     particles: {
       poolSize: 100,
       maxActiveParticles: 50,
-      defaultLifetime: 2000
-    }
+      defaultLifetime: 2000,
+    },
   },
 
   // === PERFORMANCE SETTINGS ===
@@ -277,8 +282,8 @@ export const GameConfig = {
       bullets: 50,
       particles: 100,
       damageNumbers: 20,
-      enemies: 10
-    }
+      enemies: 10,
+    },
   },
 
   // === CHARACTER GENERATION ===
@@ -289,32 +294,32 @@ export const GameConfig = {
     qualityLevels: {
       high: { resolution: 64, effects: true, animations: true },
       medium: { resolution: 48, effects: true, animations: false },
-      low: { resolution: 32, effects: false, animations: false }
+      low: { resolution: 32, effects: false, animations: false },
     },
-    
+
     templates: {
       aria: {
         baseModel: 'humanoid',
         colorScheme: 'blue_tech',
         armorStyle: 'light',
         weaponMount: 'dual_arm',
-        decals: ['energy_lines', 'tech_symbols']
+        decals: ['energy_lines', 'tech_symbols'],
       },
       titan: {
         baseModel: 'heavy_mech',
         colorScheme: 'red_military',
         armorStyle: 'heavy',
         weaponMount: 'shoulder_cannon',
-        decals: ['armor_plating', 'warning_stripes']
+        decals: ['armor_plating', 'warning_stripes'],
       },
       nexus: {
         baseModel: 'sleek_android',
         colorScheme: 'green_matrix',
         armorStyle: 'medium',
         weaponMount: 'integrated',
-        decals: ['circuit_patterns', 'data_streams']
-      }
-    }
+        decals: ['circuit_patterns', 'data_streams'],
+      },
+    },
   },
 
   // === UI CONFIGURATION ===
@@ -326,9 +331,9 @@ export const GameConfig = {
       warning: 0xffff00,
       danger: 0xff0000,
       background: 0x1a0033,
-      panel: 0x000000
+      panel: 0x000000,
     },
-    
+
     fonts: {
       primary: 'Courier, monospace',
       secondary: 'Arial, sans-serif',
@@ -336,16 +341,16 @@ export const GameConfig = {
         small: '12px',
         medium: '16px',
         large: '24px',
-        xlarge: '36px'
-      }
+        xlarge: '36px',
+      },
     },
 
     animations: {
       fadeIn: { duration: 300, ease: 'Power2.easeOut' },
       fadeOut: { duration: 200, ease: 'Power2.easeIn' },
       scaleUp: { duration: 200, ease: 'Back.easeOut' },
-      scaleDown: { duration: 150, ease: 'Power2.easeIn' }
-    }
+      scaleDown: { duration: 150, ease: 'Power2.easeIn' },
+    },
   },
 
   // === AUDIO CONFIGURATION ===
@@ -355,9 +360,9 @@ export const GameConfig = {
       master: 0.7,
       sfx: 0.8,
       music: 0.6,
-      ui: 0.5
+      ui: 0.5,
     },
-    
+
     sounds: {
       weaponFire: { volume: 0.3, variations: 3 },
       enemyHit: { volume: 0.4, variations: 2 },
@@ -365,9 +370,9 @@ export const GameConfig = {
       abilityActivate: { volume: 0.5, variations: 1 },
       mathCorrect: { volume: 0.4, variations: 2 },
       mathIncorrect: { volume: 0.3, variations: 1 },
-      waveComplete: { volume: 0.6, variations: 1 }
-    }
-  }
+      waveComplete: { volume: 0.6, variations: 1 },
+    },
+  },
 };
 
 // === UTILITY FUNCTIONS ===
@@ -381,9 +386,18 @@ export const GameConfigUtils = {
 
     return {
       ...baseStats,
-      health: GameConfig.difficulty.scaling.enemyHealth(baseStats.baseHealth, difficulty),
-      damage: GameConfig.difficulty.scaling.enemyDamage(baseStats.baseDamage, difficulty),
-      speed: GameConfig.difficulty.scaling.enemySpeed(baseStats.baseSpeed, difficulty)
+      health: GameConfig.difficulty.scaling.enemyHealth(
+        baseStats.baseHealth,
+        difficulty
+      ),
+      damage: GameConfig.difficulty.scaling.enemyDamage(
+        baseStats.baseDamage,
+        difficulty
+      ),
+      speed: GameConfig.difficulty.scaling.enemySpeed(
+        baseStats.baseSpeed,
+        difficulty
+      ),
     };
   },
 
@@ -391,7 +405,10 @@ export const GameConfigUtils = {
    * Get spawn interval based on difficulty
    */
   getSpawnInterval(baseInterval, difficulty) {
-    return GameConfig.difficulty.scaling.spawnInterval(baseInterval, difficulty);
+    return GameConfig.difficulty.scaling.spawnInterval(
+      baseInterval,
+      difficulty
+    );
   },
 
   /**
@@ -400,7 +417,8 @@ export const GameConfigUtils = {
   getWaveDifficulty(waveNumber) {
     return Math.min(
       GameConfig.difficulty.maxDifficulty,
-      GameConfig.difficulty.base + (waveNumber * GameConfig.difficulty.increasePerWave)
+      GameConfig.difficulty.base +
+        waveNumber * GameConfig.difficulty.increasePerWave
     );
   },
 
@@ -414,7 +432,7 @@ export const GameConfigUtils = {
     return {
       ...baseStats,
       damage: baseStats.damage * (modifiers.damageMultiplier || 1),
-      fireRate: baseStats.fireRate / (modifiers.fireRateMultiplier || 1)
+      fireRate: baseStats.fireRate / (modifiers.fireRateMultiplier || 1),
     };
   },
 
@@ -424,17 +442,17 @@ export const GameConfigUtils = {
   calculateMathRewards(correctAnswers, totalQuestions) {
     const accuracy = correctAnswers / totalQuestions;
     const config = GameConfig.math.rewards;
-    
+
     if (accuracy === 1.0) {
       return config.perfectWave;
-    } else if (accuracy >= 0.8) {
-      return config.correctAnswer;
-    } else {
-      return {
-        energyRestore: config.correctAnswer.energyRestore * accuracy,
-        shieldBoost: config.correctAnswer.shieldBoost * accuracy,
-        scoreMultiplier: 1.0 + (accuracy * 0.5)
-      };
     }
-  }
-}; 
+    if (accuracy >= 0.8) {
+      return config.correctAnswer;
+    }
+    return {
+      energyRestore: config.correctAnswer.energyRestore * accuracy,
+      shieldBoost: config.correctAnswer.shieldBoost * accuracy,
+      scoreMultiplier: 1.0 + accuracy * 0.5,
+    };
+  },
+};

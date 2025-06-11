@@ -8,7 +8,7 @@ export const GameConfigFallback = {
   arena: {
     width: 800,
     height: 600,
-    centerOffset: { x: 112, y: 84 }
+    centerOffset: { x: 112, y: 84 },
   },
 
   // === TIMING & PHASES ===
@@ -18,7 +18,7 @@ export const GameConfigFallback = {
     waveDuration: 30,
     mathQuizDuration: 15,
     comboDecayTime: 3000,
-    weaponSwitchCooldown: 500
+    weaponSwitchCooldown: 500,
   },
 
   // === DIFFICULTY SCALING ===
@@ -27,12 +27,17 @@ export const GameConfigFallback = {
     maxDifficulty: 3.0,
     increasePerWave: 0.2,
     scaling: {
-      spawnInterval: (baseInterval, difficulty) => baseInterval / Math.pow(difficulty, 0.8),
-      enemyHealth: (baseHealth, difficulty) => Math.floor(baseHealth * Math.pow(difficulty, 1.2)),
-      enemySpeed: (baseSpeed, difficulty) => baseSpeed * (1 + (difficulty - 1) * 0.3),
-      enemyDamage: (baseDamage, difficulty) => Math.floor(baseDamage * Math.pow(difficulty, 1.1)),
-      spawnCount: (baseCount, difficulty) => Math.min(8, Math.floor(baseCount * difficulty))
-    }
+      spawnInterval: (baseInterval, difficulty) =>
+        baseInterval / difficulty ** 0.8,
+      enemyHealth: (baseHealth, difficulty) =>
+        Math.floor(baseHealth * difficulty ** 1.2),
+      enemySpeed: (baseSpeed, difficulty) =>
+        baseSpeed * (1 + (difficulty - 1) * 0.3),
+      enemyDamage: (baseDamage, difficulty) =>
+        Math.floor(baseDamage * difficulty ** 1.1),
+      spawnCount: (baseCount, difficulty) =>
+        Math.min(8, Math.floor(baseCount * difficulty)),
+    },
   },
 
   // === PLAYER CONFIGURATION ===
@@ -45,7 +50,7 @@ export const GameConfigFallback = {
     shieldRegenDelay: 3000,
     size: { width: 40, height: 40 },
     speed: 200,
-    color: 0x00aaff
+    color: 0x00aaff,
   },
 
   // === MATH INTEGRATION ===
@@ -55,7 +60,7 @@ export const GameConfigFallback = {
       correctAnswerValue: 20,
       incorrectAnswerPenalty: -10,
       abilityUnlockThreshold: 80,
-      comboBoostThreshold: 60
+      comboBoostThreshold: 60,
     },
     quiz: {
       questionsPerWave: 3,
@@ -65,22 +70,22 @@ export const GameConfigFallback = {
         perfect: 2.0,
         good: 1.5,
         average: 1.0,
-        poor: 0.5
-      }
+        poor: 0.5,
+      },
     },
     rewards: {
       correctAnswer: {
         energyRestore: 20,
         shieldBoost: 10,
-        scoreMultiplier: 1.2
+        scoreMultiplier: 1.2,
       },
       perfectWave: {
         energyRestore: 50,
         shieldBoost: 25,
         specialAbilityCharge: 50,
-        scoreMultiplier: 2.0
-      }
-    }
+        scoreMultiplier: 2.0,
+      },
+    },
   },
 
   // === VISUAL EFFECTS ===
@@ -92,32 +97,32 @@ export const GameConfigFallback = {
         normal: '#ffffff',
         critical: '#ff0000',
         heal: '#00ff00',
-        shield: '#4444ff'
+        shield: '#4444ff',
       },
       animation: {
         duration: 1500,
         riseDistance: 50,
-        fadeDelay: 500
-      }
+        fadeDelay: 500,
+      },
     },
     camera: {
       shakeIntensity: {
         light: 0.005,
         medium: 0.01,
-        heavy: 0.02
+        heavy: 0.02,
       },
       shakeDuration: {
         light: 100,
         medium: 200,
-        heavy: 400
+        heavy: 400,
       },
-      flashDuration: 200
+      flashDuration: 200,
     },
     particles: {
       poolSize: 100,
       maxActiveParticles: 50,
-      defaultLifetime: 2000
-    }
+      defaultLifetime: 2000,
+    },
   },
 
   // === PERFORMANCE SETTINGS ===
@@ -131,8 +136,8 @@ export const GameConfigFallback = {
       bullets: 50,
       particles: 100,
       damageNumbers: 20,
-      enemies: 10
-    }
+      enemies: 10,
+    },
   },
 
   // === UI CONFIGURATION ===
@@ -144,7 +149,7 @@ export const GameConfigFallback = {
       warning: 0xffff00,
       danger: 0xff0000,
       background: 0x1a0033,
-      panel: 0x000000
+      panel: 0x000000,
     },
     fonts: {
       primary: 'Courier, monospace',
@@ -153,15 +158,15 @@ export const GameConfigFallback = {
         small: '12px',
         medium: '16px',
         large: '24px',
-        xlarge: '36px'
-      }
+        xlarge: '36px',
+      },
     },
     animations: {
       fadeIn: { duration: 300, ease: 'Power2.easeOut' },
       fadeOut: { duration: 200, ease: 'Power2.easeIn' },
       scaleUp: { duration: 200, ease: 'Back.easeOut' },
-      scaleDown: { duration: 150, ease: 'Power2.easeIn' }
-    }
+      scaleDown: { duration: 150, ease: 'Power2.easeIn' },
+    },
   },
 
   // === WEAPONS ===
@@ -174,8 +179,8 @@ export const GameConfigFallback = {
       energyCost: 5,
       accuracy: 0.95,
       icon: '🔫',
-      color: 0x00ff88
-    }
+      color: 0x00ff88,
+    },
   },
 
   // === ABILITIES ===
@@ -187,8 +192,8 @@ export const GameConfigFallback = {
       energyCost: 30,
       effect: { timeScale: 0.3 },
       icon: '⏰',
-      color: 0x9966ff
-    }
+      color: 0x9966ff,
+    },
   },
 
   // === AUDIO CONFIGURATION ===
@@ -198,16 +203,16 @@ export const GameConfigFallback = {
       master: 0.7,
       sfx: 0.8,
       music: 0.6,
-      ui: 0.5
+      ui: 0.5,
     },
     sounds: {
       weaponFire: { volume: 0.3, variations: 3 },
       enemyHit: { volume: 0.4, variations: 2 },
       playerHit: { volume: 0.6, variations: 1 },
       mathCorrect: { volume: 0.4, variations: 2 },
-      mathIncorrect: { volume: 0.3, variations: 1 }
-    }
-  }
+      mathIncorrect: { volume: 0.3, variations: 1 },
+    },
+  },
 };
 
 /**
@@ -216,24 +221,28 @@ export const GameConfigFallback = {
 export function createSafeGameConfig(gameConfig) {
   function deepMerge(target, source) {
     const result = { ...target };
-    
+
     for (const key in source) {
-      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (
+        source[key] &&
+        typeof source[key] === 'object' &&
+        !Array.isArray(source[key])
+      ) {
         result[key] = deepMerge(target[key] || {}, source[key]);
       } else if (source[key] !== undefined) {
         result[key] = source[key];
       }
     }
-    
+
     return result;
   }
-  
+
   try {
     if (!gameConfig) {
       console.warn('GameConfig is null/undefined, using fallback');
       return GameConfigFallback;
     }
-    
+
     return deepMerge(GameConfigFallback, gameConfig);
   } catch (error) {
     console.error('Error merging GameConfig, using fallback:', error);
@@ -250,16 +259,16 @@ export const GameConfigUtilsFallback = {
       health: 50 * difficulty,
       damage: 20 * difficulty,
       speed: 100,
-      points: 100
+      points: 100,
     };
   },
 
   getSpawnInterval(baseInterval, difficulty) {
-    return baseInterval / Math.pow(difficulty, 0.8);
+    return baseInterval / difficulty ** 0.8;
   },
 
   getWaveDifficulty(waveNumber) {
-    return Math.min(3.0, 1.0 + (waveNumber * 0.2));
+    return Math.min(3.0, 1.0 + waveNumber * 0.2);
   },
 
   getWeaponStats(weaponType, modifiers = {}) {
@@ -268,7 +277,7 @@ export const GameConfigUtilsFallback = {
       fireRate: 200 / (modifiers.fireRateMultiplier || 1),
       range: 400,
       projectileSpeed: 500,
-      color: 0x00ff88
+      color: 0x00ff88,
     };
   },
 
@@ -277,7 +286,7 @@ export const GameConfigUtilsFallback = {
     return {
       energyRestore: 20 * accuracy,
       shieldBoost: 10 * accuracy,
-      scoreMultiplier: 1.0 + (accuracy * 0.5)
+      scoreMultiplier: 1.0 + accuracy * 0.5,
     };
-  }
-}; 
+  },
+};

@@ -14,4 +14,4 @@ export { MainScene } from './MainScene.js';
 export { GameOverScene } from './GameOverScene.js';
 export { SplashScene } from './SplashScene.js';
 export { MenuScene } from './MenuScene.js';
-export { HudScene } from './HudScene.js'; 
+export { HudScene } from './HudScene.js';

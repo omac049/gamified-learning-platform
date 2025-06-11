@@ -7,18 +7,21 @@ A revolutionary educational RPG platform that transforms learning into epic robo
 ## 🌟 Key Features
 
 ### ⚔️ **Universal Combat System**
+
 - **Robot vs Robot Battles**: Every correct answer triggers your robot to attack enemies
 - **Character Stats Integration**: Attack power, defense, speed, accuracy, luck, and intelligence affect all combat
 - **Equipment Effects**: Weapons, shields, tech, and cores provide bonuses across ALL subjects
 - **Visual Combat Feedback**: Damage numbers, attack animations, and screen effects
 
 ### 🤖 **Character Progression System**
+
 - **Three Unique Characters**: ARIA (Stealth), TITAN (Tank), NEXUS (Tech)
 - **Level-Based Stat Scaling**: Each level increases combat effectiveness
 - **Cross-Subject Benefits**: Character builds matter in math, reading, and future subjects
 - **Equipment Integration**: Purchases affect performance in all game modes
 
 ### 🎯 **Multi-Subject Combat Integration - 100% COMPLETE**
+
 - **Week 1 - Math Combat Arena**: ✅ Full combat system with epic robot battles
 - **Week 2 - Reading Combat Arena**: ✅ Full combat system with cyber challenges
 - **Week 3 - Science Combat Lab**: ✅ Full combat system with experimental battles
@@ -27,6 +30,7 @@ A revolutionary educational RPG platform that transforms learning into epic robo
 - **Week 6 - Ultimate Boss Battle**: ✅ Final combat challenge with maximum difficulty
 
 ### 📊 **Advanced Progression Mechanics**
+
 - **Stat-Based Gameplay**: Intelligence boosts XP, luck increases coins, defense reduces penalties
 - **Equipment Bonuses**: Weapons increase damage, shields reduce penalties, tech provides hints
 - **Streak System**: Consecutive correct answers with Streak Keeper protection
@@ -35,23 +39,27 @@ A revolutionary educational RPG platform that transforms learning into epic robo
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - npm or yarn package manager
 
 ### Installation & Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd gamified-learning-platform
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -70,11 +78,13 @@ A revolutionary educational RPG platform that transforms learning into epic robo
 ## 🎮 Combat System Controls
 
 ### Universal Controls (All Subjects)
+
 - **Mouse/Touch**: Select answers to trigger robot attacks
 - **ESC** or **P**: Pause/Resume game
 - **Character Stats**: Automatically applied to all combat scenarios
 
 ### Subject-Specific Mechanics
+
 - **Math Combat**: Calculation-based damage with stat multipliers
 - **Reading Combat**: Comprehension challenges with accuracy bonuses
 - **Science Combat**: Experimental battles with tech advantages
@@ -82,6 +92,7 @@ A revolutionary educational RPG platform that transforms learning into epic robo
 ## 🤖 Character Build System
 
 ### **ARIA - Stealth Specialist**
+
 ```
 Base Stats:
 • Attack Power: +10% bonus
@@ -96,6 +107,7 @@ Equipment Synergy:
 ```
 
 ### **TITAN - Tank Commander**
+
 ```
 Base Stats:
 • Attack Power: +20% damage bonus
@@ -110,6 +122,7 @@ Equipment Synergy:
 ```
 
 ### **NEXUS - Tech Innovator**
+
 ```
 Base Stats:
 • Intelligence: +20% XP bonus
@@ -126,21 +139,25 @@ Equipment Synergy:
 ## ⚡ Equipment System
 
 ### **Weapon Categories**
+
 - **Plasma Sword**: +25% attack power
 - **Neural Disruptor**: +50% attack power
 - **Quantum Cannon**: +100% attack power
 
 ### **Shield Categories**
+
 - **Energy Barrier**: +25 defense
 - **Adaptive Armor**: +35 defense
 - **Quantum Shield**: +50 defense
 
 ### **Tech Categories**
+
 - **Hint Scanner**: +25% accuracy
 - **Time Dilator**: +15 second bonus
 - **Answer Analyzer**: +35% accuracy
 
 ### **Core Categories**
+
 - **XP Amplifier**: +50% intelligence
 - **Coin Magnet**: +100% luck
 - **Streak Keeper**: Protects answer streaks
@@ -148,6 +165,7 @@ Equipment Synergy:
 ## 🎯 Combat Mechanics
 
 ### **Correct Answer Flow**
+
 ```javascript
 1. Calculate damage: baseDamage × characterStats.attackPower
 2. Player robot performs attack animation
@@ -158,6 +176,7 @@ Equipment Synergy:
 ```
 
 ### **Incorrect Answer Flow**
+
 ```javascript
 1. Calculate penalty: basePenalty - characterStats.defense
 2. Enemy robot attacks player
@@ -167,6 +186,7 @@ Equipment Synergy:
 ```
 
 ### **Stat Integration**
+
 - **Attack Power**: Multiplies damage from correct answers
 - **Defense**: Reduces penalties from wrong answers
 - **Speed**: Provides time bonuses for quick responses
@@ -214,12 +234,14 @@ packages/
 ## 📈 Learning Objectives
 
 ### Multi-Subject Mastery
+
 - **Math**: Arithmetic operations through epic robot battles
 - **Reading**: Comprehension skills via cyber combat challenges
 - **Science**: Experimental concepts through tech-based battles
 - **Cross-Curricular**: Integrated learning with persistent character growth
 
 ### Skill Development
+
 - **Problem Solving**: Strategic thinking through character builds
 - **Pattern Recognition**: Equipment optimization and stat management
 - **Critical Thinking**: Subject mastery with immediate combat feedback
@@ -228,12 +250,14 @@ packages/
 ## 🎨 Visual Features
 
 ### Enhanced Combat Graphics
+
 - **Character-Specific Robots**: Unique designs for ARIA, TITAN, and NEXUS
 - **Attack Animations**: Dynamic combat sequences for correct answers
 - **Damage Systems**: Floating numbers showing stat-based calculations
 - **Equipment Visualization**: Weapons, shields, and tech displayed on robots
 
 ### Modern UI Design
+
 - **Cyber Theme**: Consistent sci-fi aesthetic across all subjects
 - **Combat Statistics**: Real-time display of character stats during gameplay
 - **Progress Visualization**: Equipment effects and character growth indicators
@@ -242,12 +266,14 @@ packages/
 ## 🔧 Performance Features
 
 ### Optimizations
+
 - **Reusable Combat System**: Shared mechanics across all subjects
 - **Efficient Graphics**: Container-based robot rendering
 - **Memory Management**: Proper cleanup and resource handling
 - **Throttled Updates**: Optimized system update cycles
 
 ### Scalability
+
 - **Modular Architecture**: Easy integration of new subjects
 - **Template System**: Standardized combat implementation
 - **Event-Driven Design**: Loose coupling between systems
@@ -256,18 +282,21 @@ packages/
 ## 🌟 Future Roadmap
 
 ### Phase 1: ✅ COMPLETE - Universal Combat Integration
+
 - **All 6 Educational Scenes**: Now feature full combat systems
 - **Character Stats**: Affect learning outcomes across all subjects
 - **Equipment Effects**: Provide benefits in every educational context
 - **Progressive Difficulty**: Scaling from 100 to 200 enemy health
 
 ### Phase 2: Advanced Features
+
 - **Special Abilities**: Character-specific ultimate attacks
 - **Boss Battles**: Epic encounters with unique mechanics
 - **Weapon Animations**: Enhanced visual effects for equipment
 - **Tournament Mode**: Competitive multiplayer battles
 
 ### Phase 3: Social Features
+
 - **Robot vs Robot PvP**: Player versus player combat
 - **Guild System**: Team-based progression and challenges
 - **Leaderboards**: Global rankings and achievements
@@ -276,12 +305,14 @@ packages/
 ## 📊 Success Metrics
 
 ### Educational Impact
+
 - **Engagement**: 300% increase in time spent learning
 - **Retention**: Improved knowledge retention through combat rewards
 - **Motivation**: Addictive RPG progression drives continued learning
 - **Cross-Subject**: Character builds encourage exploration of all subjects
 
 ### Technical Achievements
+
 - **Unified Framework**: Single combat system across multiple subjects
 - **Character Progression**: Meaningful stats that affect all gameplay
 - **Equipment Integration**: Purchases provide immediate benefits everywhere
@@ -289,4 +320,4 @@ packages/
 
 ---
 
-**Transform education into an epic adventure where every lesson is a legendary battle!** 🤖⚔️✨ 
+**Transform education into an epic adventure where every lesson is a legendary battle!** 🤖⚔️✨
